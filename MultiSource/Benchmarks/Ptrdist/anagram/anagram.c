@@ -128,14 +128,14 @@
  * prototypes, for those of you who have K&R compilers.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <setjmp.h>
 #include <strings.h>
-#include <unistd.h>
+#include <unistd_checked.h>
 
 /* Before compiling, make sure Quad and MASK_BITS are set properly.  For best
  * results, make Quad the largest integer size supported on your machine.
