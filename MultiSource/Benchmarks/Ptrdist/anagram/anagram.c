@@ -481,10 +481,7 @@ void DumpWord(Quad * pq) {
 )                                       /* End of debug code */
 
 void DumpWords(void) {
-static int X;
   int i;
-  X = (X+1) & 1023;
-  if (X != 0) return;
     for (i = 0; i < cpwLast; i++) wprint(apwSol[i]->pchWord);
     printf("\n");
 }
