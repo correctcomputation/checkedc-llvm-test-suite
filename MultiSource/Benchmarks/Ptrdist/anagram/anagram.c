@@ -136,11 +136,8 @@
 #include <sys/stat.h>
 #include <setjmp.h>
 #include <unistd.h>
-#include "hacks.h"
 
 jmp_buf jbAnagram;
-
-#pragma CHECKED_SCOPE ON
 
 /* Before compiling, make sure Quad and MASK_BITS are set properly.  For best
  * results, make Quad the largest integer size supported on your machine.
@@ -437,7 +434,7 @@ void BuildWord(_Array_ptr<char> pchWord : bounds(wordStart, wordEnd),
 
     Debug(wprint(pchWord);)
 
-    /* Update global count */
+    /* Update global */
     for (i = 0; i < ALPHABET; i++)
         auGlobalFrequency[i] += cchFrequency[i];
 
@@ -460,7 +457,7 @@ void
 AddWords(void) {
     _Array_ptr<char> pchLowerBounds = pchDictionary;
     _Array_ptr<char> pchUpperBounds = pchDictionary + pchDictionarySize;
-    UncheckedBoundsInit(_Array_ptr<char>, pch, bounds(pchLowerBounds, pchUpperBounds), pchDictionary)     /* walk through the dictionary */
+    _Array_ptr<char> pch : bounds(pchLowerBounds, pchUpperBounds) = pchDictionary;     /* walk through the dictionary */
 
     cpwCand = 0;
 
@@ -530,7 +527,7 @@ void FindAnagram(_Array_ptr<Quad> pqMask : count(MAX_QUADS),
     register PWord pw = 0;
     Quad qMask;
     unsigned iq;
-    UncheckedBoundsInit(PPWord, ppwEnd, bounds(ppwStart, apwCand+cpwCand), &apwCand[0])
+    PPWord ppwEnd: bounds(ppwStart, apwCand+cpwCand) = &apwCand[0];
     ppwEnd += cpwCand;
 
     ;
