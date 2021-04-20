@@ -8,6 +8,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+extern int edited;
+
 
 /*
  * Built-in type synonyms.

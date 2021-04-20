@@ -7,15 +7,14 @@
 #include "channel.h"
 #include "assign.h"
 
-#pragma CHECKED_SCOPE ON
-#define printf(...) _Unchecked { printf(__VA_ARGS__); }
-#define fprintf(...) _Unchecked { fprintf(__VA_ARGS__); }
+#define printf(...)  { printf(__VA_ARGS__); }
+#define fprintf(...)  { fprintf(__VA_ARGS__); }
 
 #define min(a,b)	((a<b) ? a : b)
 #define max(a,b)	((a<b) ? b : a)
 
 #undef bzero
-void bzero(void * : byte_count(n), size_t n);
+void bzero(void * , size_t n);
 
 /*
  *	plane allocation structures and routines
@@ -29,22 +28,22 @@ void bzero(void * : byte_count(n), size_t n);
 /* generic r/lvalue allocation map access macro */
 #define ACCESS_MAP(a, x, y)	a[(y)*channelColumns + (x)]
 
-static _Array_ptr<char> horzPlane : count((channelColumns+1)*(channelTracks+3));	/* horizontal plane allocation map */
+static char * horzPlane ;	/* horizontal plane allocation map */
 
 /* r/lvalue for accessing horizontal plane allocation map */
 #define HORZ(x,y)	ACCESS_MAP(horzPlane, x, y)
 
-static _Array_ptr<char> vertPlane : count((channelColumns+1)*(channelTracks+3));	/* vertical plane allocation map */
+static char * vertPlane ;	/* vertical plane allocation map */
 
 /* r/lvalue for accessing vertical plane allocation map */
 #define VERT(x,y)	ACCESS_MAP(vertPlane, x, y)
 
-static _Array_ptr<char> viaPlane : count((channelColumns+1)*(channelTracks+3));		/* via plane allocation map */
+static char * viaPlane ;		/* via plane allocation map */
 
 /* r/lvalue for accessing via plane allocation map */
 #define VIA(x,y)	ACCESS_MAP(viaPlane, x, y)
 
-static _Array_ptr<char> mazeRoute : count(channelColumns+1);	/* true if the col needs to be maze routed */
+static char * mazeRoute ;	/* true if the col needs to be maze routed */
 
 /*
  *	set up the plane allocation maps, note: the channel
@@ -63,7 +62,7 @@ InitAllocMaps(void)
 
     /* if (!horzPlane || !vertPlane || !viaPlane || !mazeRoute) { */
     if (horzPlane==NULL || vertPlane==NULL ||
-	viaPlane==NULL || mazeRoute==NULL) {
+	viaPlane==NULL || mazeRoute==NULL) _Checked {
 	fprintf(stderr, "unable to allocate plane allocation maps\n");
 	exit(1);
     }
@@ -72,11 +71,11 @@ InitAllocMaps(void)
 
 void
 FreeAllocMaps(void)
-{
-    _Unchecked { free<char>(horzPlane); }
-    _Unchecked { free<char>(vertPlane); }
-    _Unchecked { free<char>(viaPlane); }
-    _Unchecked { free<char>(mazeRoute); }
+_Checked {
+     _Unchecked { free<char>(horzPlane); }
+     _Unchecked { free<char>(vertPlane); }
+     _Unchecked { free<char>(viaPlane); }
+     _Unchecked { free<char>(mazeRoute); }
 }
 
 
@@ -89,9 +88,7 @@ FreeAllocMaps(void)
  *	they are sorted as needed by the line drawer
  */
 void
-DrawSegment(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2)),
-	    unsigned long x1, unsigned long y1,
-	    unsigned long x2, unsigned long y2)
+DrawSegment(_Array_ptr<char> plane, unsigned long x1, unsigned long y1, unsigned long x2, unsigned long y2)
 {
     unsigned long x, y;
 
@@ -101,7 +98,7 @@ DrawSegment(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2))
     /* must be a line */
     assert((x1 != x2) || (y1 != y2));
 
-    if (x1 == x2) {	/* vertical */
+    if (x1 == x2) _Checked {	/* vertical */
 	/* FROM_BOT at top end */
 	/* assert(ACCESS_MAP(plane, x1, min(y1, y2)) == 0); */
 	ACCESS_MAP(plane, x1, min(y1, y2)) |= FROM_BOT;
@@ -117,7 +114,7 @@ DrawSegment(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2))
 	ACCESS_MAP(plane, x1, max(y1, y2)) |= FROM_TOP;
 	       
     }
-    else { /* (y1 == y2), horizontal */
+    else _Checked { /* (y1 == y2), horizontal */
 	/* FROM_RIGHT at left end */
 	/* assert((ACCESS_MAP(plane, min(x1, x2), y1)&FROM_RIGHT) == 0); */
 	ACCESS_MAP(plane, min(x1, x2), y1) |= FROM_RIGHT;
@@ -163,9 +160,7 @@ HasVia(unsigned long x, unsigned long y)
  *	they are sorted as needed by the line drawer
  */
 int
-SegmentFree(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2)),
-	    unsigned long x1, unsigned long y1,
-	    unsigned long x2, unsigned long y2)
+SegmentFree(_Array_ptr<char> plane, unsigned long x1, unsigned long y1, unsigned long x2, unsigned long y2)
 {
     unsigned long x, y;
     unsigned long index;
@@ -173,14 +168,14 @@ SegmentFree(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2))
     /* only horz or vert segments allowed */
     assert((x1 == x2) || (y1 == y2));
 
-    if (x1 == x2) {	/* vertical */
+    if (x1 == x2) _Checked {	/* vertical */
 	index = min(y1, y2)*channelColumns + x1;
 	for (y=min(y1, y2); y<=max(y1, y2); y++, index += channelColumns) {
 	    if (plane[index])
 		return 0;
 	}
     }
-    else { /* (y1 == y2), horizontal */
+    else _Checked { /* (y1 == y2), horizontal */
 	index = y1*channelColumns + min(x1,x2); 
 	for (x=min(x1,x2); x<=max(x1,x2); x++, index++) {
 	    if (plane[index])
@@ -197,7 +192,7 @@ SegmentFree(_Array_ptr<char> plane : count((channelColumns+1)*(channelTracks+2))
  */
 void
 PrintChannel(void)
-{
+_Checked {
     unsigned long x, y;
 
     /* ms digit */
@@ -226,7 +221,7 @@ PrintChannel(void)
     for (y=1; y<=channelTracks; y++) {
 
 	printf("           ");
-	for (x=1; x<=channelColumns; x++) {
+	for (x=1; x<=channelColumns; x++) _Unchecked {
 	    if (VERT(x,y)&FROM_TOP)
 		printf(" | ")
 	    else
@@ -235,7 +230,7 @@ PrintChannel(void)
 	printf("\n");
 
 	printf("Track %3d: ", y);
-	for (x=1; x<=channelColumns; x++) {
+	for (x=1; x<=channelColumns; x++) _Unchecked {
 	    if ((HORZ(x,y)&FROM_LEFT) && (VERT(x,y)&FROM_LEFT))
 		printf("=")
 	    else if (HORZ(x,y)&FROM_LEFT)
@@ -269,7 +264,7 @@ PrintChannel(void)
 	printf("\n");
 
 	printf("           ");
-	for (x=1; x<=channelColumns; x++) {
+	for (x=1; x<=channelColumns; x++) _Unchecked {
 	    if (VERT(x,y)&FROM_BOT)
 		printf(" | ")
 	    else
@@ -313,24 +308,24 @@ PrintChannel(void)
  */
 int
 DrawNets(void)
-{
+_Checked {
     unsigned long i;
     int numLeft = 0;
 
     /* initialize maps to empty */
-    _Unchecked { bzero(horzPlane,
+     _Unchecked { bzero(horzPlane,
 	  (int)((channelColumns+1)*(channelTracks+2))); }
-    _Unchecked { bzero(vertPlane,
+     _Unchecked { bzero(vertPlane,
 	  (int)((channelColumns+1)*(channelTracks+2))); }
-    _Unchecked { bzero(viaPlane,
+     _Unchecked { bzero(viaPlane,
 	  (int)((channelColumns+1)*(channelTracks+2))); }
-    _Unchecked { bzero(mazeRoute,
+     _Unchecked { bzero(mazeRoute,
 	  (int)(channelColumns+1)); }
 
     /* draw all horizontal segments */
     for (i=1; i<=channelNets; i++) {
 	if (FIRST[i] != LAST[i])
-	    _Unchecked { DrawSegment(horzPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),
 			FIRST[i], netsAssign[i],
 			LAST[i], netsAssign[i]); }
 #ifdef VERBOSE
@@ -346,29 +341,29 @@ DrawNets(void)
 	}
 	else if ((BOT[i] == 0) && (TOP[i] != 0)) {
 	    /* only one segment, therefore no vertical constraint violation */
-	    _Unchecked { DrawSegment(vertPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, 0,
 			i, netsAssign[TOP[i]]); }
 	    DrawVia(i, netsAssign[TOP[i]]);
 	}
 	else if ((TOP[i] == 0) && (BOT[i] != 0)) {
 	    /* only one segment, therefore no vertical constraint violation */
-	    _Unchecked { DrawSegment(vertPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, netsAssign[BOT[i]],
 			i, channelTracks+1); }
 	    DrawVia(i, netsAssign[BOT[i]]);
 	}
 	/* two segments to route */
-	else if ((TOP[i] == BOT[i]) && (FIRST[TOP[i]] == LAST[TOP[i]])) {
+	else if ((TOP[i] == BOT[i]) && (FIRST[TOP[i]] == LAST[TOP[i]])) _Unchecked {
 	    /* same net, no track needed to route */
 	    assert((FIRST[TOP[i]] == i) && (LAST[TOP[i]] == i));
-	    _Unchecked { DrawSegment(vertPlane,
+	     { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, 0,
 			i, channelTracks+1); }
 	}
 	else if (TOP[i] == BOT[i]) {
 	    /* connecting to same track, therefore no vcv */
-	    _Unchecked { DrawSegment(vertPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, 0,
 			i, channelTracks+1); }
 	    DrawVia(i, netsAssign[BOT[i]]);
@@ -376,17 +371,17 @@ DrawNets(void)
 	/* two segments to route, going to different tracks */
 	else if (netsAssign[TOP[i]] < netsAssign[BOT[i]]) {
 	    /* no vertical constraint violation */
-	    _Unchecked { DrawSegment(vertPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, 0,
 			i, netsAssign[TOP[i]]); }
 	    DrawVia(i, netsAssign[TOP[i]]);
-	    _Unchecked { DrawSegment(vertPlane,
+	     _Unchecked { DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),
 			i, netsAssign[BOT[i]],
 			i, channelTracks+1); }
 	    DrawVia(i, netsAssign[BOT[i]]);
 	}
 	/* otherwise, maze routing is required */
-	else {
+	else _Unchecked {
 	    assert(netsAssign[TOP[i]] > netsAssign[BOT[i]]);
 	    mazeRoute[i] = 1;
 	    numLeft++;
@@ -438,7 +433,7 @@ CleanNet(unsigned long net)
     /* net is finished */
     firstVia = 9999999;
     lastVia = 0;
-    for (i=effFIRST; i<=effLAST; i++) {
+    for (i=effFIRST; i<=effLAST; i++) _Checked {
 	if (HasVia(i, track)) {
 	    if (i < firstVia)
 		firstVia = i;
@@ -470,7 +465,7 @@ CleanNet(unsigned long net)
  */
 static int
 HasVCV(unsigned long i)
-{
+_Checked {
     return ((TOP[i] != 0) &&
 	    (BOT[i] != 0) &&
 	    (TOP[i] != BOT[i]) &&
@@ -490,36 +485,36 @@ Maze1Mech(unsigned long i,		/* column */
 	  unsigned long b1,		/* bent channel from b1 to b2 */
 	  unsigned long b2,		/* s1, b1 are at the terminals */
 	  int bXdelta, int bYdelta)	/* bend X, Y delta from s */
-_Unchecked {
-    if (SegmentFree(vertPlane,		/* straight vert seg in col i */
+ {
+    if (SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* straight vert seg in col i */
 		    i, s1,
 		    i, s2) &&
-	SegmentFree(vertPlane,		/* bent vert seg in col i */
+	SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent vert seg in col i */
 		    i, b1,
 		    i, s2+bYdelta) &&
-	SegmentFree(vertPlane,		/* bent jog in vert plane */
+	SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent jog in vert plane */
 		    i, s2+bYdelta,
 		    i+bXdelta, s2+bYdelta) &&
-	SegmentFree(vertPlane,		/* run along segment in vert plane */
+	SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* run along segment in vert plane */
 		    i+bXdelta, s2+bYdelta,
 		    i+bXdelta, b2) &&
 	!HasVCV(i+bXdelta)) {
 
-	DrawSegment(vertPlane,		/* straight vert seg in col i */
+	DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* straight vert seg in col i */
 		    i, s1,
 		    i, s2);
 	DrawVia(i, s2);			/* via down to horz plane */
-	DrawSegment(vertPlane,		/* bent vert seg in col i */
+	DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent vert seg in col i */
 		    i, b1,
 		    i, s2+bYdelta);
-	DrawSegment(vertPlane,		/* bent jog in vert plane */
+	DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent jog in vert plane */
 		    i, s2+bYdelta,
 		    i+bXdelta, s2+bYdelta);
-	DrawSegment(vertPlane,		/* run along segment in vert plane */
+	DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* run along segment in vert plane */
 		    i+bXdelta, s2+bYdelta,
 		    i+bXdelta, b2);
 	DrawVia(i+bXdelta, b2);		/* via down to horz plane */
-	DrawSegment(horzPlane,		/* possibly extend horz seg */
+	DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),		/* possibly extend horz seg */
 		    i+bXdelta, b2,
 		    i, b2);
 	return 1;
@@ -530,12 +525,12 @@ _Unchecked {
 
 int
 Maze1(void)
-{
+_Checked {
     int numLeft = 0;
     unsigned long p, s;
     unsigned long i;
 
-    for (i=1; i<=channelColumns; i++) {
+    for (i=1; i<=channelColumns; i++) _Unchecked {
 	if (mazeRoute[i]) {
 
 	    s = netsAssign[TOP[i]];
@@ -620,7 +615,7 @@ Maze1(void)
 		CleanNet(BOT[i]);
 	    }
 #endif
-	    else {
+	    else _Checked {
 		/* could not maze1 route this column */
 		numLeft++;
 	    }
@@ -650,9 +645,7 @@ Maze1(void)
  * can this track be extended to the range specified, return result
  */
 int
-ExtendOK(unsigned long net, _Array_ptr<char> plane : count((channelColumns + 1)*(channelTracks + 3)),
-	 unsigned long _x1, unsigned long _y1,	/* start seg */
-	 unsigned long _x2, unsigned long _y2)	/* end seg */
+ExtendOK(unsigned long net, _Array_ptr<char> plane : count(_x1), unsigned long _x1, unsigned long _y1, unsigned long _x2, unsigned long _y2)	/* end seg */
 {
     unsigned long x1, y1, x2, y2;
 
@@ -666,24 +659,24 @@ ExtendOK(unsigned long net, _Array_ptr<char> plane : count((channelColumns + 1)*
 
     if ((x1 >= FIRST[net]) && (x2 <= LAST[net]))
 	return 1;	/* inside the net */
-    if ((x1 < FIRST[net]) && (x2 > LAST[net])) {
+    if ((x1 < FIRST[net]) && (x2 > LAST[net])) _Checked {
 	/* subsumes */
-	_Unchecked { return (SegmentFree(plane,
+	 { return (SegmentFree(plane,
 			    x1, y1,
 			    FIRST[net]-1, y1) &&
 		SegmentFree(plane,
 			    LAST[net]+1, y1,
 			    x2, y1)); }
     }
-    else if (x1 < FIRST[net]) {
+    else if (x1 < FIRST[net]) _Checked {
 	/* to the left possibly overlapping */
-	_Unchecked { return SegmentFree(plane,
+	 { return SegmentFree(plane,
 			   x1, y1,
 			   FIRST[net]-1, y1); }
     }
-    else if (x2 > LAST[net]) {
+    else if (x2 > LAST[net]) _Checked {
 	/* to the right possibly overlapping */
-	_Unchecked { return SegmentFree(plane,
+	 { return SegmentFree(plane,
 			   LAST[net]+1, y1,
 			   x2, y1); }
     }
@@ -706,7 +699,7 @@ Maze2Mech(unsigned long bentNet,	/* net to bend */
 	  unsigned long yStart,         /* rows to search across */
           unsigned long yEnd,
           int bYdelta)                  /* direction of bend vert seg */
-{
+_Checked {
     unsigned long row, col;
     int colFree;
 
@@ -717,42 +710,42 @@ Maze2Mech(unsigned long bentNet,	/* net to bend */
 	colFree = 1;
 	for (col = xStart;
 	     colFree && (col != xEnd);
-	     col += bXdelta) _Unchecked { /* search for col */ // _Unchecked Required for all calls to SegmentFree and DrawSegment
-	    if ((colFree = SegmentFree(horzPlane,	/* bent horz seg */
+	     col += bXdelta)  _Unchecked { /* search for col */ //  Required for all calls to SegmentFree and DrawSegment
+	    if ((colFree = SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),	/* bent horz seg */
 			    i, row,
 			    col, row)) &&
-		SegmentFree(vertPlane,		/* straight seg in vert */
+		SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* straight seg in vert */
 			    i, s1,
 			    i, s2) &&
-		SegmentFree(vertPlane,		/* bent to bend in vert */
+		SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent to bend in vert */
 			    i, b1,
 			    i, row) &&
-		SegmentFree(vertPlane,		/* bent to net */
+		SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent to net */
 			    col, row,
 			    col, b2-1) &&
 		!HasVCV(col) &&
-		ExtendOK(bentNet, horzPlane,
+		ExtendOK(bentNet, _Assume_bounds_cast<_Array_ptr<char>>(horzPlane,  count(_x1)),
 			 col, b2,
 			 i, b2)) {
 		/* draw it! */
-		DrawSegment(vertPlane,		/* straight seg in vert */
+		DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* straight seg in vert */
 			    i, s1,
 			    i, s2);
 		DrawVia(i, s2);			/* conn to horz */
 
-		DrawSegment(vertPlane,		/* bent to bend in vert */
+		DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent to bend in vert */
 			    i, b1,
 			    i, row);
 		DrawVia(i, row);		/* conn to horz plane */
-		DrawSegment(horzPlane,		/* bent horz seg */
+		DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),		/* bent horz seg */
 			    i, row,
 			    col, row);
 		DrawVia(col, row);		/* conn to vert plane */
-		DrawSegment(vertPlane,		/* bent to net */
+		DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),		/* bent to net */
 			    col, row,
 			    col, b2);
 		DrawVia(col, b2);		/* back to horz plane */
-		DrawSegment(horzPlane,		/* possibly extend net */
+		DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),		/* possibly extend net */
 			    col, b2,
 			    i, b2);
 		return 1;
@@ -765,12 +758,12 @@ Maze2Mech(unsigned long bentNet,	/* net to bend */
 
 int
 Maze2(void)
-{
+_Checked {
     int numLeft = 0;
     unsigned long p, s;
     unsigned long i;
 
-    for (i=1; i<=channelColumns; i++) {
+    for (i=1; i<=channelColumns; i++) _Unchecked {
 	if (mazeRoute[i]) {
 
 	    s = netsAssign[TOP[i]];
@@ -863,7 +856,7 @@ Maze2(void)
 		CleanNet(BOT[i]);
 	    }
 #endif
-	    else {
+	    else _Checked {
 		/* could not maze2 route this column */
 		numLeft++;
 	    }
@@ -883,18 +876,17 @@ Maze2(void)
 
 
 void
-FindFreeHorzSeg(unsigned long startCol, unsigned long row,
-		_Ptr<unsigned long> rowStart, _Ptr<unsigned long> rowEnd)
-{
+FindFreeHorzSeg(unsigned long startCol, unsigned long row, _Ptr<unsigned long> rowStart, _Ptr<unsigned long> rowEnd)
+_Checked {
     unsigned long i;
 
-    for (i=startCol; i >= 1; i--) {
+    for (i=startCol; i >= 1; i--) _Unchecked {
 	if (ACCESS_MAP(horzPlane, i, row))
 	    break;
     }
     *rowStart = i+1;
 
-    for (i=startCol; i <= channelColumns; i++) {
+    for (i=startCol; i <= channelColumns; i++) _Unchecked {
 	if (ACCESS_MAP(horzPlane, i, row))
 	    break;
     }
@@ -909,7 +901,7 @@ Maze3Mech(unsigned long topNet,		/* top net to bend */
 	  unsigned long s2,		/* bend is next to s2 */
 	  unsigned long b1,		/* bottom segment from b1 to b2 */
 	  unsigned long b2)		/* s1, b1 are at the terminals */
-{
+_Checked {
     unsigned long topRow, topCol, botRow, botCol;
     unsigned long topStart, topEnd, botStart, botEnd;
     ;
@@ -923,65 +915,65 @@ Maze3Mech(unsigned long topNet,		/* top net to bend */
 	    if (botEnd <= botStart)
 		continue;
 	    for (topCol = topStart; topCol <= topEnd; topCol++) {
-		for (botCol = botStart; botCol <= botEnd; botCol++) _Unchecked {  // Required for all calls to SegmentFree and DrawSegment
+		for (botCol = botStart; botCol <= botEnd; botCol++)  _Unchecked {  // Required for all calls to SegmentFree and DrawSegment
 		    if ((topCol != i) && (botCol != i) &&
 			(topRow != botRow) && (topCol != botCol) &&
-			SegmentFree(vertPlane,	/* top down */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),	/* top down */
 				    i, s1,
 				    i, topRow) &&
-			SegmentFree(horzPlane,	/* over to drop point */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),	/* over to drop point */
 				    i, topRow,
 				    topCol, topRow) &&
-			SegmentFree(vertPlane,	/* down to net */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),	/* down to net */
 				    topCol, topRow,
 				    topCol, s2+1) &&
 			!HasVCV(topCol) &&
-			ExtendOK(topNet, horzPlane,
+			ExtendOK(topNet, _Assume_bounds_cast<_Array_ptr<char>>(horzPlane,  count(_x1)),
 				 topCol, s2,
 				 i, s2) &&
-			SegmentFree(vertPlane,  /* bot up */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),  /* bot up */
 				    i, b1,
 				    i, botRow) &&
-			SegmentFree(horzPlane,  /* over to up point */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),  /* over to up point */
 				    i, botRow,
 				    botCol, botRow) &&
-			SegmentFree(vertPlane,  /* up to net */
+			SegmentFree(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),  /* up to net */
 				    botCol, botRow,
 				    botCol, b2-1) &&
 			!HasVCV(botCol) &&
-			ExtendOK(botNet, horzPlane,
+			ExtendOK(botNet, _Assume_bounds_cast<_Array_ptr<char>>(horzPlane,  count(_x1)),
 				 botCol, b2,
 				 i, b2)) {
 			/* draw it! */
-			DrawSegment(vertPlane,  /* top down */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),  /* top down */
 				    i, s1,
 				    i, topRow);
 			DrawVia(i, topRow);	/* via to horz */
-			DrawSegment(horzPlane,  /* over to drop point */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),  /* over to drop point */
 				    i, topRow,
 				    topCol, topRow);
 			DrawVia(topCol, topRow);	/* up to vert */
-			DrawSegment(vertPlane,  /* down to net */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),  /* down to net */
 				    topCol, topRow,
 				    topCol, s2);
 			DrawVia(topCol, s2);	/* via to net */
-			DrawSegment(horzPlane,	/* conn to net */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),	/* conn to net */
 				    topCol, s2,
 				    i, s2);
 
-			DrawSegment(vertPlane, /* bot up */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)), /* bot up */
 				    i, b1,
 				    i, botRow);
 			DrawVia(i, botRow);	/* via to horz */
-			DrawSegment(horzPlane,  /* over to up point */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),  /* over to up point */
 				    i, botRow,
 				    botCol, botRow);
 			DrawVia(botCol, botRow);	/* via to vert */
-			DrawSegment(vertPlane,  /* up to net */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(vertPlane, byte_count(0)),  /* up to net */
 				    botCol, botRow,
 				    botCol, b2);
 			DrawVia(botCol, b2);	/* via to net */
-			DrawSegment(horzPlane,	/* conn to net */
+			DrawSegment(_Assume_bounds_cast<_Array_ptr<char>>(horzPlane, byte_count(0)),	/* conn to net */
 				    botCol, b2,
 				    i, b2);
     			;
@@ -997,12 +989,12 @@ Maze3Mech(unsigned long topNet,		/* top net to bend */
 
 
 int Maze3(void)
-{
+_Checked {
     int numLeft = 0;
     unsigned long p, s;
     unsigned long i;
 
-    for (i=1; i<=channelColumns; i++) {
+    for (i=1; i<=channelColumns; i++) _Unchecked {
 	if (mazeRoute[i]) {
 
 	    s = netsAssign[TOP[i]];
@@ -1016,7 +1008,7 @@ int Maze3(void)
 		CleanNet(TOP[i]);
 		CleanNet(BOT[i]);
 	    }
-	    else {
+	    else _Checked {
 		/* could not maze2 route this column */
 		numLeft++;
 	    }
