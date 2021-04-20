@@ -19,8 +19,7 @@
 #include "types.h"
 #include "channel.h"
 
-#pragma CHECKED_SCOPE ON
-#define printf(...) _Unchecked { printf(__VA_ARGS__); }
+#define printf(...)  { printf(__VA_ARGS__); }
 
 /*
  *
@@ -54,7 +53,7 @@ BuildChannel(void)
 void
 DimensionChannel(void)
 {
-    _Ptr<FILE>	channelFP = NULL;
+    FILE *	channelFP = NULL;
     ulong	line;
     ulong	dim;
     ulong	net;
@@ -90,7 +89,7 @@ DimensionChannel(void)
     do {
 	line++;
 	unsigned int c1, b1, t1;
-	_Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
+	 { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
 	if (stat != EOF) {
 	    if (stat == 3) {
@@ -158,7 +157,7 @@ DimensionChannel(void)
 void
 DescribeChannel(void)
 {
-    _Ptr<FILE> channelFP = NULL;
+    FILE * channelFP = NULL;
     ulong	line;
     ulong	col;
     ulong	bot;
@@ -208,7 +207,7 @@ DescribeChannel(void)
     do {
 	line++;
 	unsigned int c1, b1, t1;
-	_Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
+	 { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
 	if (stat != EOF) {
 	    if (stat == 3) {

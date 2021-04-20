@@ -23,8 +23,7 @@
 #include "assign.h"
 #include "channel.h"
 
-#pragma CHECKED_SCOPE ON
-#define printf(...) _Unchecked { printf(__VA_ARGS__); }
+#define printf(...)  { printf(__VA_ARGS__); }
 
 /*
  *
@@ -41,18 +40,18 @@ AllocVCG(void)
     storageLimitVCG = (channelNets + 1) * (channelNets + 1);
     SCC = malloc<ulong>((channelNets + 1) * sizeof(ulong));
     perSCC = malloc<ulong>((channelNets + 1) * sizeof(ulong));
-    removeVCG = malloc<_Ptr<constraintVCGType>>((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType *));
+    removeVCG = malloc<constraintVCGType *>((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType *));
 }
 
 void
 FreeVCG(void)
 {
-    _Unchecked { free<nodeVCGType>(VCG); }
-    _Unchecked { free<constraintVCGType>(storageRootVCG); }
+     { free<nodeVCGType>(VCG); }
+     { free<constraintVCGType>(storageRootVCG); }
     storageLimitVCG = 0;
-    _Unchecked { free<ulong>(SCC); }
-    _Unchecked { free<ulong>(perSCC); }
-    _Unchecked { free<_Ptr<constraintVCGType>>(removeVCG); }
+     { free<ulong>(SCC); }
+     { free<ulong>(perSCC); }
+     { free<constraintVCGType *>(removeVCG); }
 }
 
 void
@@ -77,7 +76,7 @@ BuildVCG(void)
 	 * Above constraints.
 	 */
 	constraint = 0;
-	_Unchecked { VCG[net].netsAboveHook = storageVCG; }
+	 { VCG[net].netsAboveHook = storageVCG; }
 	for (col = 1; col <= channelColumns; col++) {
 	    if ((TOP[col] == net) && (BOT[col] != net) && (BOT[col] != 0)) {
 		/*
@@ -113,7 +112,7 @@ BuildVCG(void)
 	 * Below constraints.
 	 */
 	constraint = 0;
-	_Unchecked { VCG[net].netsBelowHook = storageVCG; }
+	 { VCG[net].netsBelowHook = storageVCG; }
 	for (col = 1; col <= channelColumns; col++) {
 	    if ((BOT[col] == net) && (TOP[col] != net) && (TOP[col] != 0)) {
 		/*
@@ -148,7 +147,7 @@ BuildVCG(void)
 }
 
 void
-DFSClearVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1))
+DFSClearVCG(nodeVCGType * VCG )
 {
     ulong	net;
 
@@ -161,7 +160,7 @@ DFSClearVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1))
 }
 
 void
-DumpVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1))
+DumpVCG(nodeVCGType * VCG )
 {
     ulong	net;
     ulong	which;
@@ -189,7 +188,7 @@ DumpVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1))
 }
 
 void
-DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+DFSAboveVCG(nodeVCGType * VCG ,
 	    ulong net)
 {
     ulong	s;
@@ -208,7 +207,7 @@ DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-DFSBelowVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+DFSBelowVCG(nodeVCGType * VCG ,
 	    ulong net)
 {
     ulong	s;
@@ -227,9 +226,9 @@ DFSBelowVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-SCCofVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
-	     _Array_ptr<ulong> SCC : count(channelNets + 1),
-		 _Array_ptr<ulong> tmpPerSCC : count(totalSCC + 1))
+SCCofVCG(nodeVCGType * VCG ,
+	     ulong * SCC ,
+		 ulong * tmpPerSCC )
 {
     ulong      	net;
     ulong      	scc;
@@ -242,7 +241,7 @@ SCCofVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
     ;
 
     ulong originalTotalSCC = totalSCC;
-    _Array_ptr<ulong> perSCC : count(totalSCC + 1) = tmpPerSCC;
+    ulong * perSCC  = tmpPerSCC;
 
     /*
      * DFS of above edges.
@@ -310,9 +309,9 @@ SCCofVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-SCC_DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+SCC_DFSAboveVCG(nodeVCGType * VCG ,
 		ulong net,
-		_Ptr<ulong> label)
+		ulong * label)
 {
     ulong	s;
     ulong 	above;
@@ -332,7 +331,7 @@ SCC_DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-SCC_DFSBelowVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+SCC_DFSBelowVCG(nodeVCGType * VCG ,
 		ulong net,
 		ulong label)
 {
@@ -353,8 +352,8 @@ SCC_DFSBelowVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-DumpSCC(_Array_ptr<ulong> SCC : count(channelNets + 1),
-		_Array_ptr<ulong> perSCC : count(totalSCC + 1))
+DumpSCC(ulong * SCC ,
+		ulong * perSCC )
 {
     ulong	net;
     ulong	scc;
@@ -505,10 +504,10 @@ AcyclicVCG(void)
 }
 
 void
-RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
-					_Array_ptr<ulong> SCC : count(channelNets + 1),
-					_Array_ptr<ulong> perSCC : count(totalSCC + 1),
-		            _Array_ptr<_Ptr<constraintVCGType>> removeVCG : count((channelNets + 1) * (channelNets + 1)))
+RemoveConstraintVCG(nodeVCGType * VCG ,
+					ulong * SCC ,
+					ulong * perSCC ,
+		            constraintVCGType * * removeVCG )
 {
     ulong			scc;
     ulong			net;
@@ -518,7 +517,7 @@ RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
     ulong			top;
     ulong			bot;
     ulong			col;
-    _Ptr<constraintVCGType>	remove = NULL;
+    constraintVCGType *	remove = NULL;
 
     for (scc = 1; scc <= totalSCC; scc++) {
 	/*
@@ -608,7 +607,7 @@ RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 			     */
 			    if (weight < best) {
 				best = weight;
-				_Unchecked { remove = &VCG[net].netsAboveHook[which]; }
+				 { remove = &VCG[net].netsAboveHook[which]; }
 			    }
 			}
 		    }
@@ -645,7 +644,7 @@ RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 ulong
-ExistPathAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+ExistPathAboveVCG(nodeVCGType * VCG ,
 		  ulong above,
 		  ulong below)
 {
@@ -655,7 +654,7 @@ ExistPathAboveVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 void
-LongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+LongestPathVCG(nodeVCGType * VCG ,
 	       ulong net)
 {
     ulong	track;
@@ -719,7 +718,7 @@ LongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 ulong
-DFSAboveLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+DFSAboveLongestPathVCG(nodeVCGType * VCG ,
 		       ulong net)
 {
     ulong	s;
@@ -745,7 +744,7 @@ DFSAboveLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 ulong
-DFSBelowLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+DFSBelowLongestPathVCG(nodeVCGType * VCG ,
 		       ulong net)
 {
     ulong	s;
@@ -771,10 +770,10 @@ DFSBelowLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
 }
 
 ulong
-VCV(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+VCV(nodeVCGType * VCG ,
     ulong check,
     ulong track,
-    _Array_ptr<ulong> assign : count(channelNets + 1))
+    ulong * assign )
 {
     ulong	net;
     ulong	vcv;
