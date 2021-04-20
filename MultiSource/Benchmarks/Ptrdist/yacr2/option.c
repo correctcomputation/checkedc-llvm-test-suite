@@ -5,7 +5,7 @@
  *
  */
 
-#include <string.h>
+#include <string_checked.h>
 
 #define OPTION_CODE
 
@@ -16,10 +16,12 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include "channel.h"
 
+#pragma CHECKED_SCOPE ON
+#define printf(...) _Unchecked { printf(__VA_ARGS__); }
 
 /*
  *
@@ -28,18 +30,19 @@
  */
 
 void
-Option(int argc, _Array_ptr<char *> argv : count(argc))
+Option(int argc,
+       _Array_ptr<_Nt_array_ptr<char>> argv : count(argc))
 {
     /*
      * Check arguments.
      */
-    if (argc != 2) _Checked {
-	_Unchecked { printf("\nUsage: yacr2 <filename>\n\n"); };
+    if (argc != 2) {
+	printf("\nUsage: yacr2 <filename>\n\n");
 	exit(1);
     }
 
     /*
      * Specified options.
      */
-    channelFile = argv[1];
+    _Unchecked { channelFile = argv[1]; }
 }

@@ -15,8 +15,8 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include <assert.h>
 #include "option.h"
 #include "channel.h"
@@ -26,6 +26,8 @@
 #include "maze.h"
 
 
+#pragma CHECKED_SCOPE ON
+#define printf(...) _Unchecked { printf(__VA_ARGS__); }
 /*
  *
  * Code.
@@ -33,7 +35,8 @@
  */
 
 int
-main(int argc, _Array_ptr<char *> argv : count(argc))
+main(int argc,
+     _Array_ptr<_Nt_array_ptr<char>> argv : count(argc))
 {
     ulong      	done;
     ulong	fail;
@@ -50,7 +53,7 @@ for (TIMELOOP = 0; TIMELOOP < 20; ++TIMELOOP) {
     AcyclicVCG();
     BuildHCG();
 
-    do _Checked {
+    do {
 	/*
 	 * Setup.
 	 */
@@ -73,17 +76,17 @@ for (TIMELOOP = 0; TIMELOOP < 20; ++TIMELOOP) {
 	do {
 	    done = TRUE;
 	    if ((netsLeft = DrawNets()) != 0) {
-		_Unchecked { printf("Assignment could not route %d columns, trying maze1...\n",
-		       netsLeft); };
+		printf("Assignment could not route %d columns, trying maze1...\n",
+		       netsLeft);
 		if ((netsLeft = Maze1()) != 0) {
-		    _Unchecked { printf("Maze1 could not route %d columns, trying maze2...\n",
-			   netsLeft); };
+		    printf("Maze1 could not route %d columns, trying maze2...\n",
+			   netsLeft);
 		    if ((netsLeft = Maze2()) != 0) {
-			_Unchecked { printf("Maze2 could not route %d columns, trying maze3...\n",
-			       netsLeft); };
+			printf("Maze2 could not route %d columns, trying maze3...\n",
+			       netsLeft);
 			if ((netsLeft = Maze3()) != 0) {
-			    _Unchecked { printf("Maze3 could not route %d columns, adding a track...\n",
-				   netsLeft); };
+			    printf("Maze3 could not route %d columns, adding a track...\n",
+				   netsLeft);
 			    /* PrintChannel(); */
 			    if (! fail) {
 				channelTracks++;
@@ -126,7 +129,7 @@ for (TIMELOOP = 0; TIMELOOP < 20; ++TIMELOOP) {
 	 * Did adding a row within existing assignment work?
 	 * If not, just start over.
 	 */
-	if (! done) _Unchecked {
+	if (! done) {
 	    FreeAllocMaps();
 	    FreeAssign();
 	    assert(channelTracks == channelTracksCopy + 1);

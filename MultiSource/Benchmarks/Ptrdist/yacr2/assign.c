@@ -14,8 +14,8 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include <assert.h>
 #include "types.h"
 #include "assign.h"
@@ -23,6 +23,8 @@
 #include "vcg.h"
 #include "hcg.h"
 
+#pragma CHECKED_SCOPE ON
+#define printf(...) _Unchecked { printf(__VA_ARGS__); }
 
 /*
  *
@@ -38,51 +40,52 @@ AllocAssign(void)
     /*
      * Allocate cost matrix.
      */
-    costMatrix = (_Array_ptr<_Array_ptr<long>>)malloc<_Array_ptr<long>>((channelNets+1) * sizeof(long *));
+    costMatrix = malloc<struct costMatrixRow>((channelNets+1) * sizeof(struct costMatrixRow));
     for (net = 1; net <= channelNets; net++) {
-	costMatrix[net] = (_Array_ptr<long>)malloc<long>((channelTracks+2) * sizeof(long));
+	costMatrix[net].len = channelTracks + 2;
+	costMatrix[net].row = malloc<long>((channelTracks+2) * sizeof(long));
     }
 
     /*
      * Allocate structures associated with cost matrix.
      */
-    tracksNotPref = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelTracks+2) * sizeof(ulong));
-    tracksTopNotPref = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelTracks+2) * sizeof(ulong));
-    tracksBotNotPref = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelTracks+2) * sizeof(ulong));
-    tracksNoHCV = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelTracks+2) * sizeof(ulong));
-    tracksAssign = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelTracks+2) * sizeof(ulong));
-    netsAssign = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets+1) * sizeof(ulong));
-    netsAssignCopy = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets+1) * sizeof(ulong));
+    tracksNotPref = malloc<ulong>((channelTracks+2) * sizeof(ulong));
+    tracksTopNotPref = malloc<ulong>((channelTracks+2) * sizeof(ulong));
+    tracksBotNotPref = malloc<ulong>((channelTracks+2) * sizeof(ulong));
+    tracksNoHCV = malloc<ulong>((channelTracks+2) * sizeof(ulong));
+    tracksAssign = malloc<ulong>((channelTracks+2) * sizeof(ulong));
+    netsAssign = malloc<ulong>((channelNets+1) * sizeof(ulong));
+    netsAssignCopy = malloc<ulong>((channelNets+1) * sizeof(ulong));
 }
 
 void
 FreeAssign(void)
-_Checked {
+{
     ulong	net;
 
     /*
      * Free cost matrix.
      */
     for (net = 1; net <= channelNets; net++) {
-	free<long>(costMatrix[net]);
+	_Unchecked { free<long>(costMatrix[net].row); }
     }
-    free<_Array_ptr<long>>(costMatrix);
+    _Unchecked { free<struct costMatrixRow>(costMatrix); }
 
     /*
      * Free structures associated with cost matrix.
      */
-    free<unsigned long>(tracksNotPref);
-    free<unsigned long>(tracksTopNotPref);
-    free<unsigned long>(tracksBotNotPref);
-    free<unsigned long>(tracksNoHCV);
-    free<unsigned long>(tracksAssign);
-    free<unsigned long>(netsAssign);
-    free<unsigned long>(netsAssignCopy);
+    _Unchecked { free<ulong>(tracksNotPref); }
+    _Unchecked { free<ulong>(tracksTopNotPref); }
+    _Unchecked { free<ulong>(tracksBotNotPref); }
+    _Unchecked { free<ulong>(tracksNoHCV); }
+    _Unchecked { free<ulong>(tracksAssign); }
+    _Unchecked { free<ulong>(netsAssign); }
+    _Unchecked { free<ulong>(netsAssignCopy); }
 }
 
 void
 NetsAssign(void)
-_Checked {
+{
     ulong	net;
 
     /*
@@ -122,7 +125,7 @@ _Checked {
 
 void
 MaxNetsAssign(void)
-_Checked {
+{
     ulong	net;
     ulong	netSelect;
     ulong	netsCrossing;
@@ -130,7 +133,7 @@ _Checked {
 
 #ifdef VERBOSE
     printf("density = %d\n", channelDensity);
-    printf("pivot = %d\n\n", channelDensityColumn);
+	printf("pivot = %d\n\n", channelDensityColumn);
 #endif
 
     /*
@@ -181,7 +184,7 @@ RightNetsAssign(void)
     /*
      * Init.
      */
-    for (net = 1; net <= channelNets; net++) _Checked {
+    for (net = 1; net <= channelNets; net++) {
 	CROSSING[net] = FALSE;
     }
     netsCrossing = 0;
@@ -189,7 +192,7 @@ RightNetsAssign(void)
     /*
      * Assign nets within channel.
      */
-    for (col = channelDensityColumn+1; col <= channelColumns; col++) _Checked {
+    for (col = channelDensityColumn+1; col <= channelColumns; col++) {
 	/*
 	 * Collection.
 	 */
@@ -253,7 +256,7 @@ LeftNetsAssign(void)
     /*
      * Init.
      */
-    for (net = 1; net <= channelNets; net++) _Checked {
+    for (net = 1; net <= channelNets; net++) {
 	CROSSING[net] = FALSE;
     }
     netsCrossing = 0;
@@ -261,7 +264,7 @@ LeftNetsAssign(void)
     /*
      * Assign nets within channel.
      */
-    for (col = channelDensityColumn-1; col >= 1; col--) _Checked {
+    for (col = channelDensityColumn-1; col >= 1; col--) {
 	/*
 	 * Collection.
 	 */
@@ -312,7 +315,9 @@ LeftNetsAssign(void)
 }
 
 void
-Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ulong select)
+Assign(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+       _Array_ptr<ulong> assign : count(channelNets + 1),
+       ulong select)
 {
     long	dist;
     ulong	ideal;
@@ -322,7 +327,7 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
     ulong	vcv;
     long	vcvDist;
     ulong	vcvAssign;
-    _Ptr<long> costNet = ((void *)0);
+    _Array_ptr<long>	costNet : count(channelTracks + 2) = NULL;
     ;
 
 #ifdef VERBOSE
@@ -346,32 +351,32 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
     IdealTrack(channelTracks, cardTopNotPref, cardBotNotPref, &ideal);
 
 #ifdef VERBOSE
-    printf("HCV's:\n");
+	printf("HCV's:\n");
     for (track = 1; track <= channelTracks; track++) {
 	if (tracksNoHCV[track]) {
 	    printf("[%d] no hcv\n", track);
 	}
 	else {
-	    printf("[%d] hcv\n", track);
+	   	printf("[%d] hcv\n", track);
 	}
     }
-    printf("\n");
+	printf("\n");
 #endif
 
     /*
      * What tracks to consider for assign.
      */
-    costNet = costMatrix[select];
+    _Unchecked { costNet = costMatrix[select].row; }
     assert((select >= 1) && (select <= channelNets));
     tracks = 0;
-    for (track = 1; track <= channelTracks; track++) _Checked {
+    for (track = 1; track <= channelTracks; track++) {
 	tracksAssign[track] = FALSE;
     }
 
     /*
      * Choice 1.
      */
-    for (track = 1; track <= channelTracks; track++) _Checked {
+    for (track = 1; track <= channelTracks; track++) {
 	if (tracksNoHCV[track] && (! tracksNotPref[track])) {
 	    tracksAssign[track] = TRUE;
 	    tracks++;
@@ -385,7 +390,7 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
     /*
      * Choice 2.
      */
-    if (tracks == 0) _Checked {
+    if (tracks == 0) {
 	for (track = 1; track <= channelTracks; track++) {
 	    if (tracksNoHCV[track] && tracksTopNotPref[track] && tracksBotNotPref[track]) {
 		tracksAssign[track] = TRUE;
@@ -401,7 +406,7 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
     /*
      * Choice 3.
      */
-    if (tracks == 0) _Checked {
+    if (tracks == 0) {
 	for (track = 2; track < channelTracks; track++) {
 	    if (tracksNoHCV[track] && tracksNotPref[track]) {
 		tracksAssign[track] = TRUE;
@@ -417,7 +422,7 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
     /*
      * Choice 4.
      */
-    if (tracks == 0) _Checked {
+    if (tracks == 0) {
 	if (tracksNoHCV[1]) {
 	    tracksAssign[1] = TRUE;
 	    tracks++;
@@ -471,24 +476,24 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
      */
     trackAssign = 0;
     vcvAssign = INFINITY;
-    for (track = 1; track <= channelTracks; track++) _Checked {
+    for (track = 1; track <= channelTracks; track++) {
 	if (tracksAssign[track]) {
 	    vcv = VCV(VCG, select, track, netsAssign);
-	    if (vcv < vcvAssign) _Unchecked {
+	    if (vcv < vcvAssign) {
 		vcvAssign = vcv;
 		trackAssign = track;
 		vcvDist = (long) (track - ideal);
-		if (vcvDist < 0) _Checked {
+		if (vcvDist < 0) {
 		    vcvDist *= -1;
 		}
 	    }
-	    else if (vcv == vcvAssign) _Unchecked {
+	    else if (vcv == vcvAssign) {
 		assert(trackAssign);
 		dist = (long) (track - ideal);
-		if (dist < 0) _Checked {
+		if (dist < 0) {
 		    dist *= -1;
 		}
-		if (dist < vcvDist) _Checked {
+		if (dist < vcvDist) {
 		    vcvDist = dist;
 		    vcvAssign = vcv;
 		    trackAssign = track;
@@ -505,12 +510,16 @@ Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ul
 }
 
 void
-Select(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulong> netsAssign, _Ptr<ulong> netSelect, _Array_ptr<ulong> CROSSING)
+Select(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+	_Array_ptr<nodeHCGType> HCG : count(channelNets + 1),
+	_Array_ptr<ulong> netsAssign : count(channelNets + 1),
+	_Ptr<ulong> netSelect,
+	_Array_ptr<ulong> CROSSING : count(channelNets + 1))
 {
     ulong	net;
     ulong	track;
     ulong	select;
-    _Array_ptr<long> costNet = ((void *)0);
+    _Array_ptr<long>	costNet : count(channelTracks + 2) = NULL;
     long	cost;
     long	largest;
 
@@ -525,10 +534,10 @@ Select(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulon
      */
     largest = -1;
     select = 0;
-    for (net = 1; net <= channelNets; net++) _Checked {
+    for (net = 1; net <= channelNets; net++) {
 	if (CROSSING[net]) {
 	    cost = 0;
-	    costNet = costMatrix[net];
+	    _Unchecked { costNet = costMatrix[net].row; }
 	    for (track = 1; track <= channelTracks; track++) {
 		cost += costNet[track];
 	    }
@@ -547,21 +556,24 @@ Select(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulon
 }
 
 void
-BuildCostMatrix(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> CROSSING)
-_Checked {
+BuildCostMatrix(_Array_ptr<nodeVCGType> VCG : count(channelNets + 1),
+		_Array_ptr<nodeHCGType> HCG : count(channelNets + 1),
+		_Array_ptr<ulong> netsAssign : count(channelNets + 1),
+		_Array_ptr<ulong> CROSSING : count(channelNets + 1))
+{
     ulong	net;
     ulong	track;
     ulong	ideal;
     long       	dist;
     long	mult;
-    _Array_ptr<long> costNet = ((void *)0);
+    _Array_ptr<long>	costNet : count(channelTracks + 2) = NULL;
     ;
 
     /*
      * Initialize cost matrix.
      */
     for (net = 1; net <= channelNets; net++) {
-	costNet = costMatrix[net];
+	_Unchecked { costNet = costMatrix[net].row; }
 	for (track = 1; track <= channelTracks; track++) {
 	    costNet[track] = 0;
 	}
@@ -573,7 +585,7 @@ _Checked {
 	     * Compute one column in cost matrix.
 	     * That is, the cost associated with each track for some net.
 	     */
-	    costNet = costMatrix[net];
+	    _Unchecked { costNet = costMatrix[net].row; }
 
 	    /*
 	     * Compute measures related to cost.
@@ -596,7 +608,7 @@ _Checked {
 			}
 		    }
 		    else {
-			if ((track > (channelTracks - cardBotNotPref)) && (track <= cardTopNotPref)) _Unchecked {
+			if ((track > (channelTracks - cardBotNotPref)) && (track <= cardTopNotPref)) {
 			    mult = cardNotPref - (cardTopNotPref + cardBotNotPref - channelTracks);
 			    assert(mult >= 0);
 			    costNet[track] = MEDIUM * mult;
@@ -606,9 +618,9 @@ _Checked {
 			}
 		    }
 
-		    if (costNet[track] < INFINITY) _Unchecked {
+		    if (costNet[track] < INFINITY) {
 			dist = (long) (ideal - track);
-			if (dist < 0) _Checked {
+			if (dist < 0) {
 			    dist *= -1;
 			}
 			costNet[track] += LOW * dist;
@@ -624,15 +636,18 @@ _Checked {
 }
 
 void
-IdealTrack(ulong tracks, ulong top, ulong bot, _Ptr<ulong> ideal)
-_Checked {
+IdealTrack(ulong tracks,
+	   ulong top,
+	   ulong bot,
+	   _Ptr<ulong> ideal)
+{
     ulong	num;
     ulong	den;
 
     num = (top * (tracks - bot)) + (bot * (top + 1));
     den = top + bot;
 
-    if (den != 0) _Unchecked {
+    if (den != 0) {
 	*ideal = (ulong) ((ulong) num / (ulong) den);
     }
     else {
