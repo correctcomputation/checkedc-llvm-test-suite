@@ -14,14 +14,15 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include <assert.h>
 #include "types.h"
 #include "hcg.h"
 #include "channel.h"
 
-
+#pragma CHECKED_SCOPE ON
+#define printf(...) _Unchecked { printf(__VA_ARGS__); }
 /*
  *
  * Code.
@@ -31,23 +32,23 @@
 void
 AllocHCG(void)
 {
-    HCG = (_Array_ptr<nodeHCGType>)malloc<nodeHCGType>((channelNets + 1) * sizeof(nodeHCGType));
-    storageRootHCG = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets + 1) * (channelNets + 1) * sizeof(ulong));
-    storageHCG = storageRootHCG;
+    HCG = malloc<nodeHCGType>((channelNets + 1) * sizeof(nodeHCGType));
+    storageRootHCG = malloc<ulong>((channelNets + 1) * (channelNets + 1) * sizeof(ulong));
+    _Unchecked { storageHCG = storageRootHCG; }
     storageLimitHCG = (channelNets + 1) * (channelNets + 1);
 }
 
 void
 FreeHCG(void)
-_Checked {
-    free<nodeHCGType>(HCG);
-    free<unsigned long>(storageRootHCG);
+{
+    _Unchecked { free<nodeHCGType>(HCG); }
+    _Unchecked { free<ulong>(storageRootHCG); }
     storageLimitHCG = 0;
 }
 
 void
 BuildHCG(void)
-_Checked {
+{
     ulong	net;
     ulong	which;
     ulong	constraint;
@@ -68,14 +69,15 @@ _Checked {
 	first = FIRST[net];
 	last = LAST[net];
 	constraint = 0;
-	HCG[net].netsHook = storageHCG;
+	HCG[net].nets = constraint;
+	_Unchecked { HCG[net].netsHook = storageHCG; }
 	for (which = 1; which <= channelNets; which++) {
 	    if (((FIRST[which] < first) && (LAST[which] < first)) || ((FIRST[which] > last) && (LAST[which] > last))) {
 		/*
 		 * No constraint.
 		 */
 	    }
-	    else _Unchecked {
+	    else {
 		/*
 		 * No constraint should ever already exist.
 		 * Because there is only one first and last
@@ -83,7 +85,7 @@ _Checked {
 		 * never be added twice.
 		 */
 		add = TRUE;
-		for (check = 0; check < constraint; check++) _Checked {
+		for (check = 0; check < constraint; check++) {
 		    if (HCG[net].netsHook[check] == which) {
 			add = FALSE;
 			break;
@@ -95,6 +97,7 @@ _Checked {
 		 * Add constraint.
 		 */
 		assert(storageLimitHCG > 0);
+		HCG[net].nets = constraint;
 		HCG[net].netsHook[constraint] = which;
 		storageHCG++;
 		storageLimitHCG--;
@@ -106,8 +109,8 @@ _Checked {
 }
 
 void
-DFSClearHCG(_Array_ptr<nodeHCGType> HCG)
-_Checked {
+DFSClearHCG(_Array_ptr<nodeHCGType> HCG : count(channelNets + 1))
+{
     ulong	net;
 
     for (net = 1; net <= channelNets; net++) {
@@ -116,23 +119,26 @@ _Checked {
 }
 
 void
-DumpHCG(_Array_ptr<nodeHCGType> HCG)
-_Checked {
+DumpHCG(_Array_ptr<nodeHCGType> HCG : count(channelNets + 1))
+{
     ulong	net;
     ulong	which;
 
     for (net = 1; net <= channelNets; net++) {
-	_Unchecked { printf("[%d]\n", net); };
-	for (which = 0; which < HCG[net].nets; which++) _Unchecked {
+	printf("[%d]\n", net);
+	for (which = 0; which < HCG[net].nets; which++) {
 	    printf("%d ", HCG[net].netsHook[which]);
 	}
-	_Unchecked { printf("\n\n"); };
+	printf("\n\n");
     }	
 }
 
 void
-NoHCV(_Array_ptr<nodeHCGType> HCG, ulong select, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> tracksNoHCV)
-_Checked {
+NoHCV(_Array_ptr<nodeHCGType> HCG : count(channelNets + 1),
+      ulong select,
+      _Array_ptr<ulong> netsAssign : count(channelNets + 1),
+      _Array_ptr<ulong> tracksNoHCV : count(channelTracks + 2))
+{
     ulong	track;
     ulong	net;
     ulong	which;

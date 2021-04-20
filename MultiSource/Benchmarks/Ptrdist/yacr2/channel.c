@@ -14,11 +14,13 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include "types.h"
 #include "channel.h"
 
+#pragma CHECKED_SCOPE ON
+#define printf(...) _Unchecked { printf(__VA_ARGS__); }
 
 /*
  *
@@ -28,7 +30,7 @@
 
 void
 BuildChannel(void)
-_Checked {
+{
     /*
      * What is the length dimension of the channel?
      * That is, how many columns in the channel?
@@ -52,7 +54,7 @@ _Checked {
 void
 DimensionChannel(void)
 {
-    _Ptr<FILE> channelFP = ((void *)0);
+    _Ptr<FILE>	channelFP = NULL;
     ulong	line;
     ulong	dim;
     ulong	net;
@@ -65,12 +67,12 @@ DimensionChannel(void)
      * Open channel description file.
      */
     channelFP = fopen(channelFile, "r");
-    if (channelFP == NULL) _Checked {
+    if (channelFP == NULL) {
 	/*
 	 * Error in channel file description.
 	 */
-	_Unchecked { printf("Error:\n"); };
-	_Unchecked { printf("\tChannel file cannot be opened.\n"); };
+	printf("Error:\n");
+	printf("\tChannel file cannot be opened.\n");
 	exit(1);
     }
     
@@ -88,9 +90,9 @@ DimensionChannel(void)
     do {
 	line++;
 	unsigned int c1, b1, t1;
-	stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1);
+	_Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
-	if (stat != EOF) _Checked {
+	if (stat != EOF) {
 	    if (stat == 3) {
 		/*
 		 * Update column #.
@@ -113,9 +115,9 @@ DimensionChannel(void)
 		/*
 		 * Error in channel file description.
 		 */
-		_Unchecked { printf("Error:\n"); };
-		_Unchecked { printf("\tChannel file description invalid at line %d.\n", line); };
-		_Unchecked { printf("\tIncorrect number of specifiers.\n"); };
+		printf("Error:\n");
+		printf("\tChannel file description invalid at line %d.\n", line);
+		printf("\tIncorrect number of specifiers.\n");
 		exit(1);
 	    }
 	}
@@ -123,26 +125,26 @@ DimensionChannel(void)
 
     /*
      * Close channel description file.
-     */
-    if (fclose(channelFP) == EOF) _Checked {
+	 */
+    if (fclose(channelFP) == EOF) {
 	/*
 	 * Error in channel file description.
 	 */
-	_Unchecked { printf("Error:\n"); };
-	_Unchecked { printf("\tChannel file cannot be closed.\n"); };
+	printf("Error:\n");
+	printf("\tChannel file cannot be closed.\n");
 	exit(1);
     }
 
     /*
      * Check channel dimension.
      */
-    if (dim == 0) _Checked {
+    if (dim == 0) {
 	/*
 	 * Error in channel file description.
 	 */
-	_Unchecked { printf("Error:\n"); };
-	_Unchecked { printf("\tChannel description invalid.\n"); };
-	_Unchecked { printf("\tChannel has null dimension.\n"); };
+	printf("Error:\n");
+	printf("\tChannel description invalid.\n");
+	printf("\tChannel has null dimension.\n");
 	exit(1);
     }
 
@@ -156,7 +158,7 @@ DimensionChannel(void)
 void
 DescribeChannel(void)
 {
-    _Ptr<FILE> channelFP = ((void *)0);
+    _Ptr<FILE> channelFP = NULL;
     ulong	line;
     ulong	col;
     ulong	bot;
@@ -166,17 +168,17 @@ DescribeChannel(void)
     /*
      * Top terminals of channel.
      */
-    TOP = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelColumns+1) * sizeof(ulong));
+    TOP = malloc<ulong>((channelColumns+1) * sizeof(ulong));
 
     /*
      * Bottom terminals of channel.
      */
-    BOT = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelColumns+1) * sizeof(ulong));
+    BOT = malloc<ulong>((channelColumns+1) * sizeof(ulong));
 
     /*
      * Initialize terminals of channel.
      */
-    for (col = 0; col <= channelColumns; col++) _Checked {
+    for (col = 0; col <= channelColumns; col++) {
 	TOP[col] = 0;
 	BOT[col] = 0;
     }
@@ -185,12 +187,12 @@ DescribeChannel(void)
      * Open channel description file.
      */
     channelFP = fopen(channelFile, "r");
-    if (channelFP == NULL) _Checked {
+    if (channelFP == NULL) {
 	/*
 	 * Error in channel file description.
 	 */
-	_Unchecked { printf("Error:\n"); };
-	_Unchecked { printf("\tChannel file cannot be opened.\n"); };
+	printf("Error:\n");
+	printf("\tChannel file cannot be opened.\n");
 	exit(1);
     }
 
@@ -206,9 +208,9 @@ DescribeChannel(void)
     do {
 	line++;
 	unsigned int c1, b1, t1;
-	stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1);
+	_Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
-	if (stat != EOF) _Checked {
+	if (stat != EOF) {
 	    if (stat == 3) {
 		/*
 		 * Build column.
@@ -217,9 +219,9 @@ DescribeChannel(void)
 		    /*
 		     * Error in channel file description.
 		     */
-		    _Unchecked { printf("Error:\n"); };
-		    _Unchecked { printf("\tChannel file description invalid at line %d.\n", line); };
-		    _Unchecked { printf("\tColumn number out of range.\n"); };
+		    printf("Error:\n");
+		    printf("\tChannel file description invalid at line %d.\n", line);
+		    printf("\tColumn number out of range.\n");
 		    exit(1);
 		}
 		else {
@@ -234,9 +236,9 @@ DescribeChannel(void)
 		/*
 		 * Error in channel file description.
 		 */
-		_Unchecked { printf("Error:\n"); };
-		_Unchecked { printf("\tChannel file description invalid at line %d.\n", line); };
-		_Unchecked { printf("\tIncorrect number of specifiers.\n"); };
+		printf("Error:\n");
+		printf("\tChannel file description invalid at line %d.\n", line);
+		printf("\tIncorrect number of specifiers.\n");
 		exit(1);
 	    }
 	}
@@ -245,12 +247,12 @@ DescribeChannel(void)
     /*
      * Close channel description file.
      */
-    if (fclose(channelFP) == EOF) _Checked {
+    if (fclose(channelFP) == EOF) {
 	/*
 	 * Error in channel file description.
 	 */
-	_Unchecked { printf("Error:\n"); };
-	_Unchecked { printf("\tChannel file cannot be closed.\n"); };
+	printf("Error:\n");
+	printf("\tChannel file cannot be closed.\n");
 	exit(1);
     }
 }
@@ -267,27 +269,27 @@ DensityChannel(void)
     /*
      * Allocate track dimension structures.
      */
-    FIRST = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets+1) * sizeof(ulong));
-    LAST = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets+1) * sizeof(ulong));
-    DENSITY = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelColumns+1) * sizeof(ulong));
-    CROSSING = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets+1) * sizeof(ulong));
+    FIRST = malloc<ulong>((channelNets+1) * sizeof(ulong));
+    LAST = malloc<ulong>((channelNets+1) * sizeof(ulong));
+    DENSITY = malloc<ulong>((channelColumns+1) * sizeof(ulong));
+    CROSSING = malloc<ulong>((channelNets+1) * sizeof(ulong));
 
     /*
      * Initialize track dimension structures.
      */
-    for (init = 0; init <= channelNets; init++) _Checked {
+    for (init = 0; init <= channelNets; init++) {
 	FIRST[init] = 0;
 	LAST[init] = 0;
 	CROSSING[init] = 0;
     }
-    for (init = 0; init <= channelColumns; init++) _Checked {
+    for (init = 0; init <= channelColumns; init++) {
 	DENSITY[init] = 0;
     }
 
     /*
      * Compute the span for each net.
      */
-    for (which = 1; which <= channelNets; which++) _Checked {
+    for (which = 1; which <= channelNets; which++) {
 	/*
 	 * Compute first.  This is the location of
 	 * the first column for this net.
@@ -332,7 +334,7 @@ DensityChannel(void)
     }
 #else
     bound = 0;
-    for (col = channelColumns; col >= 1; col--) _Checked {
+    for (col = channelColumns; col >= 1; col--) {
 	if (DENSITY[col] > bound) {
 	    bound = DENSITY[col];
 	    boundColumn = col;
