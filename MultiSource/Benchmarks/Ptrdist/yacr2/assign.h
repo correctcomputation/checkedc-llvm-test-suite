@@ -37,7 +37,7 @@
  */
 
 struct costMatrixRow {
-    long * row ;
+    _Array_ptr<long> row ;
     ulong len;
 };
 
@@ -67,17 +67,17 @@ ulong *			netsAssignCopy ;
 
 #else	/* ASSIGN_CODE */
 
-extern struct costMatrixRow *			costMatrix ; // 2dim, second dim is (channelTracks + 2)
-extern ulong *			tracksNoHCV ;
-extern ulong *			tracksNotPref ;
-extern ulong *			tracksTopNotPref ;
-extern ulong *			tracksBotNotPref ;
+extern _Array_ptr<struct costMatrixRow> costMatrix ; // 2dim, second dim is (channelTracks + 2)
+extern _Array_ptr<ulong> tracksNoHCV : count(channelTracks) ;
+extern _Array_ptr<ulong> tracksNotPref : count(channelTracks) ;
+extern _Array_ptr<ulong> tracksTopNotPref ;
+extern _Array_ptr<ulong> tracksBotNotPref ;
 extern ulong				cardNotPref;
 extern ulong				cardTopNotPref;
 extern ulong				cardBotNotPref;
-extern ulong *			tracksAssign ;
-extern ulong *			netsAssign ;
-extern ulong *			netsAssignCopy ;
+extern _Array_ptr<ulong> tracksAssign : count(channelTracks) ;
+extern _Array_ptr<ulong> netsAssign ;
+extern _Array_ptr<ulong> netsAssignCopy ;
 
 #endif	/* ASSIGN_CODE */
 
@@ -153,28 +153,16 @@ extern void
 LeftNetsAssign(void);
 
 extern void
-Assign(nodeVCGType * ,
-       ulong * ,
-       ulong);
+Assign(_Array_ptr<nodeVCGType> VCG : count(select), _Array_ptr<ulong> assign, ulong select);
 
 extern void
-Select(nodeVCGType * ,
-       nodeHCGType * ,
-       ulong * ,
-       ulong *,
-       ulong * );
+Select(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulong> netsAssign, _Ptr<ulong> netSelect, _Array_ptr<ulong> CROSSING);
 
 extern void
-BuildCostMatrix(nodeVCGType * ,
-        nodeHCGType * ,
-        ulong * ,
-        ulong * );
+BuildCostMatrix(_Array_ptr<nodeVCGType> VCG, _Array_ptr<nodeHCGType> HCG, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> CROSSING);
 
 extern void
-IdealTrack(ulong,
-	   ulong,
-	   ulong,
-	   ulong *);
+IdealTrack(ulong tracks, ulong top, ulong bot, _Ptr<ulong> ideal);
 
 #endif	/* ASSIGN_CODE */
 

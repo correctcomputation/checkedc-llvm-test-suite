@@ -33,13 +33,13 @@ AllocHCG(void)
 {
     HCG = malloc<nodeHCGType>((channelNets + 1) * sizeof(nodeHCGType));
     storageRootHCG = malloc<ulong>((channelNets + 1) * (channelNets + 1) * sizeof(ulong));
-     { storageHCG = storageRootHCG; }
+     _Checked { storageHCG = storageRootHCG; }
     storageLimitHCG = (channelNets + 1) * (channelNets + 1);
 }
 
 void
 FreeHCG(void)
-{
+_Checked {
      { free<nodeHCGType>(HCG); }
      { free<ulong>(storageRootHCG); }
     storageLimitHCG = 0;
@@ -47,7 +47,7 @@ FreeHCG(void)
 
 void
 BuildHCG(void)
-{
+_Checked {
     ulong	net;
     ulong	which;
     ulong	constraint;
@@ -76,7 +76,7 @@ BuildHCG(void)
 		 * No constraint.
 		 */
 	    }
-	    else {
+	    else _Unchecked {
 		/*
 		 * No constraint should ever already exist.
 		 * Because there is only one first and last
@@ -84,7 +84,7 @@ BuildHCG(void)
 		 * never be added twice.
 		 */
 		add = TRUE;
-		for (check = 0; check < constraint; check++) {
+		for (check = 0; check < constraint; check++) _Checked {
 		    if (HCG[net].netsHook[check] == which) {
 			add = FALSE;
 			break;
@@ -108,8 +108,8 @@ BuildHCG(void)
 }
 
 void
-DFSClearHCG(nodeHCGType * HCG )
-{
+DFSClearHCG(_Array_ptr<nodeHCGType> HCG)
+_Checked {
     ulong	net;
 
     for (net = 1; net <= channelNets; net++) {
@@ -118,8 +118,8 @@ DFSClearHCG(nodeHCGType * HCG )
 }
 
 void
-DumpHCG(nodeHCGType * HCG )
-{
+DumpHCG(_Array_ptr<nodeHCGType> HCG)
+_Checked {
     ulong	net;
     ulong	which;
 
@@ -133,11 +133,8 @@ DumpHCG(nodeHCGType * HCG )
 }
 
 void
-NoHCV(nodeHCGType * HCG ,
-      ulong select,
-      ulong * netsAssign ,
-      ulong * tracksNoHCV )
-{
+NoHCV(_Array_ptr<nodeHCGType> HCG, ulong select, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> tracksNoHCV)
+_Checked {
     ulong	track;
     ulong	net;
     ulong	which;

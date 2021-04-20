@@ -46,11 +46,11 @@ typedef struct _constraintVCGType {
 } constraintVCGType;
 
 typedef struct _nodeVCGType {
-    constraintVCGType *	netsAboveHook ;
+    _Array_ptr<constraintVCGType> netsAboveHook ;
     ulong			netsAbove;
     ulong			netsAboveLabel;
     ulong			netsAboveReached;
-    constraintVCGType *	netsBelowHook ;
+    _Array_ptr<constraintVCGType> netsBelowHook ;
     ulong			netsBelow;
     ulong			netsBelowLabel;
     ulong			netsBelowReached;
@@ -79,15 +79,15 @@ ulong *				perSCC ;
 
 #else	/* VCG_CODE */
 
-extern nodeVCGType *			VCG ;
-extern constraintVCGType *			storageRootVCG ;
-extern constraintVCGType *			storageVCG ;
+extern _Array_ptr<nodeVCGType> VCG ;
+extern _Array_ptr<constraintVCGType> storageRootVCG ;
+extern _Array_ptr<constraintVCGType> storageVCG ;
 extern ulong					storageLimitVCG;
-extern constraintVCGType * *		removeVCG ;
+extern _Array_ptr<_Ptr<constraintVCGType>> removeVCG : count(removeTotalVCG) ;
 extern ulong					removeTotalVCG;
-extern ulong *				SCC ;
+extern _Array_ptr<ulong> SCC ;
 extern ulong					totalSCC;
-extern ulong *				perSCC ;
+extern _Array_ptr<ulong> perSCC ;
 
 #endif	/* VCG_CODE */
 
@@ -186,69 +186,49 @@ extern void
 BuildVCG(void);
 
 extern void
-DFSClearVCG(nodeVCGType * );
+DFSClearVCG(_Array_ptr<nodeVCGType> VCG);
 
 extern void
-DumpVCG(nodeVCGType * );
+DumpVCG(_Array_ptr<nodeVCGType> VCG);
 
 extern void
-DFSAboveVCG(nodeVCGType * ,
-	    ulong);
+DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net);
 
 extern void
-DFSBelowVCG(nodeVCGType * ,
-	    ulong);
+DFSBelowVCG(_Array_ptr<nodeVCGType> VCG, ulong net);
 
 extern void
-SCCofVCG(nodeVCGType * ,
-		 ulong * ,
-		 ulong * );
+SCCofVCG(_Array_ptr<nodeVCGType> VCG, _Array_ptr<ulong> SCC, _Array_ptr<ulong> tmpPerSCC);
 
 extern void
-SCC_DFSAboveVCG(nodeVCGType * ,
-				ulong,
-				ulong *);
+SCC_DFSAboveVCG(_Array_ptr<nodeVCGType> VCG, ulong net, _Ptr<ulong> label);
 
 extern void
-SCC_DFSBelowVCG(nodeVCGType * ,
-		ulong,
-		ulong);
+SCC_DFSBelowVCG(_Array_ptr<nodeVCGType> VCG, ulong net, ulong label);
 
 extern void
-DumpSCC(ulong * ,
-		ulong * );
+DumpSCC(_Array_ptr<ulong> SCC, _Array_ptr<ulong> perSCC);
 
 extern void
 AcyclicVCG(void);
 
 extern void
-RemoveConstraintVCG(nodeVCGType * ,
-					ulong * ,
-					ulong * ,
-					constraintVCGType * * );
+RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG, _Array_ptr<ulong> SCC, _Array_ptr<ulong> perSCC, _Array_ptr<_Ptr<constraintVCGType>> removeVCG : count(0));
 
 extern ulong
-ExistPathAboveVCG(nodeVCGType * ,
-		  ulong,
-		  ulong);
+ExistPathAboveVCG(_Array_ptr<nodeVCGType> VCG : count(above), ulong above, ulong below);
 
 extern void
-LongestPathVCG(nodeVCGType * ,
-	       ulong);
+LongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net);
 
 extern ulong
-DFSAboveLongestPathVCG(nodeVCGType * ,
-		       ulong);
+DFSAboveLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net);
 
 extern ulong
-DFSBelowLongestPathVCG(nodeVCGType * ,
-		       ulong);
+DFSBelowLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net);
 
 extern ulong
-VCV(nodeVCGType * ,
-	ulong,
-	ulong,
-	ulong * );
+VCV(_Array_ptr<nodeVCGType> VCG : count(check), ulong check, ulong track, _Array_ptr<ulong> assign);
 
 #endif	/* VCG_CODE */
 

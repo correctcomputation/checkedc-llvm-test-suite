@@ -31,7 +31,7 @@
  */
 
 typedef struct _nodeHCGType {
-    ulong *	netsHook ;
+    _Array_ptr<ulong> netsHook : count(nets) ;
     ulong	nets;
     ulong	netsReached;
 } nodeHCGType;
@@ -55,9 +55,9 @@ ulong					storageLimitHCG;
 
 #else	/* HCG_CODE */
 
-extern nodeHCGType *			HCG ;
-extern ulong *			storageRootHCG ;
-extern ulong *			storageHCG ;
+extern _Array_ptr<nodeHCGType> HCG ;
+extern _Array_ptr<ulong> storageRootHCG ;
+extern _Array_ptr<ulong> storageHCG ;
 extern ulong				storageLimitHCG;
 
 #endif	/* HCG_CODE */
@@ -104,16 +104,13 @@ extern void
 BuildHCG(void);
 
 extern void
-DFSClearHCG(nodeHCGType * );
+DFSClearHCG(_Array_ptr<nodeHCGType> HCG);
 
 extern void
-DumpHCG(nodeHCGType * );
+DumpHCG(_Array_ptr<nodeHCGType> HCG);
 
 extern void
-NoHCV(nodeHCGType * ,
-      ulong,
-      ulong * ,
-      ulong * );
+NoHCV(_Array_ptr<nodeHCGType> HCG, ulong select, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> tracksNoHCV);
 
 #endif	/* HCG_CODE */
 

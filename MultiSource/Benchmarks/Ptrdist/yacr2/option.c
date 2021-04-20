@@ -29,9 +29,8 @@
  */
 
 void
-Option(int argc,
-       char * * argv )
-{
+Option(int argc, _Array_ptr<_Nt_array_ptr<char>> argv : count(argc))
+_Checked {
     /*
      * Check arguments.
      */

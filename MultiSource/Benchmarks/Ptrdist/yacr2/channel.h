@@ -59,17 +59,17 @@ char *		channelFile;
 
 extern ulong		channelNets;
 extern ulong		channelColumns;
-extern ulong *		TOP ;
-extern ulong *		BOT ;
-extern ulong *		FIRST ;
-extern ulong *		LAST ;
-extern ulong *		DENSITY ;
-extern ulong *		CROSSING ;
+extern _Array_ptr<ulong> TOP : count(channelColumns) ;
+extern _Array_ptr<ulong> BOT : count(channelColumns) ;
+extern _Array_ptr<ulong> FIRST ;
+extern _Array_ptr<ulong> LAST ;
+extern _Array_ptr<ulong> DENSITY ;
+extern _Array_ptr<ulong> CROSSING ;
 extern ulong		channelTracks;
 extern ulong		channelTracksCopy;
 extern ulong		channelDensity;
 extern ulong		channelDensityColumn;
-extern char *		channelFile;
+extern _Nt_array_ptr<char> channelFile;
 
 #endif	/* CHANNEL_CODE */
 

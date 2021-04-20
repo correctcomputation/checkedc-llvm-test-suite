@@ -29,7 +29,7 @@
 
 void
 BuildChannel(void)
-{
+_Checked {
     /*
      * What is the length dimension of the channel?
      * That is, how many columns in the channel?
@@ -53,7 +53,7 @@ BuildChannel(void)
 void
 DimensionChannel(void)
 {
-    FILE *	channelFP = NULL;
+    _Ptr<FILE> channelFP = NULL;
     ulong	line;
     ulong	dim;
     ulong	net;
@@ -66,7 +66,7 @@ DimensionChannel(void)
      * Open channel description file.
      */
     channelFP = fopen(channelFile, "r");
-    if (channelFP == NULL) {
+    if (channelFP == NULL) _Checked {
 	/*
 	 * Error in channel file description.
 	 */
@@ -86,10 +86,10 @@ DimensionChannel(void)
     line = 0;
     dim = 0;
     net = 0;
-    do {
+    do _Checked {
 	line++;
 	unsigned int c1, b1, t1;
-	 { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
+	 _Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
 	if (stat != EOF) {
 	    if (stat == 3) {
@@ -125,7 +125,7 @@ DimensionChannel(void)
     /*
      * Close channel description file.
 	 */
-    if (fclose(channelFP) == EOF) {
+    if (fclose(channelFP) == EOF) _Checked {
 	/*
 	 * Error in channel file description.
 	 */
@@ -137,7 +137,7 @@ DimensionChannel(void)
     /*
      * Check channel dimension.
      */
-    if (dim == 0) {
+    if (dim == 0) _Checked {
 	/*
 	 * Error in channel file description.
 	 */
@@ -157,7 +157,7 @@ DimensionChannel(void)
 void
 DescribeChannel(void)
 {
-    FILE * channelFP = NULL;
+    _Ptr<FILE> channelFP = NULL;
     ulong	line;
     ulong	col;
     ulong	bot;
@@ -177,7 +177,7 @@ DescribeChannel(void)
     /*
      * Initialize terminals of channel.
      */
-    for (col = 0; col <= channelColumns; col++) {
+    for (col = 0; col <= channelColumns; col++) _Checked {
 	TOP[col] = 0;
 	BOT[col] = 0;
     }
@@ -186,7 +186,7 @@ DescribeChannel(void)
      * Open channel description file.
      */
     channelFP = fopen(channelFile, "r");
-    if (channelFP == NULL) {
+    if (channelFP == NULL) _Checked {
 	/*
 	 * Error in channel file description.
 	 */
@@ -204,10 +204,10 @@ DescribeChannel(void)
      * [column #] [bottom net #] [top net #]
      */
     line = 0;
-    do {
+    do _Checked {
 	line++;
 	unsigned int c1, b1, t1;
-	 { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
+	 _Unchecked { stat = fscanf(channelFP, "%u%u%u", &c1, &b1, &t1); }
 	col = c1; bot = b1; top = t1;
 	if (stat != EOF) {
 	    if (stat == 3) {
@@ -246,7 +246,7 @@ DescribeChannel(void)
     /*
      * Close channel description file.
      */
-    if (fclose(channelFP) == EOF) {
+    if (fclose(channelFP) == EOF) _Checked {
 	/*
 	 * Error in channel file description.
 	 */
@@ -276,19 +276,19 @@ DensityChannel(void)
     /*
      * Initialize track dimension structures.
      */
-    for (init = 0; init <= channelNets; init++) {
+    for (init = 0; init <= channelNets; init++) _Checked {
 	FIRST[init] = 0;
 	LAST[init] = 0;
 	CROSSING[init] = 0;
     }
-    for (init = 0; init <= channelColumns; init++) {
+    for (init = 0; init <= channelColumns; init++) _Checked {
 	DENSITY[init] = 0;
     }
 
     /*
      * Compute the span for each net.
      */
-    for (which = 1; which <= channelNets; which++) {
+    for (which = 1; which <= channelNets; which++) _Checked {
 	/*
 	 * Compute first.  This is the location of
 	 * the first column for this net.
@@ -333,7 +333,7 @@ DensityChannel(void)
     }
 #else
     bound = 0;
-    for (col = channelColumns; col >= 1; col--) {
+    for (col = channelColumns; col >= 1; col--) _Checked {
 	if (DENSITY[col] > bound) {
 	    bound = DENSITY[col];
 	    boundColumn = col;

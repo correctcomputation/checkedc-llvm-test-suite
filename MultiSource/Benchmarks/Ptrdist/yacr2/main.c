@@ -34,9 +34,8 @@
  */
 
 int
-main(int argc,
-     char * * argv )
-{
+main(int argc, _Array_ptr<_Nt_array_ptr<char>> argv : count(argc))
+_Checked {
     ulong      	done;
     ulong	fail;
     ulong	net;
@@ -128,7 +127,7 @@ for (TIMELOOP = 0; TIMELOOP < 20; ++TIMELOOP) {
 	 * Did adding a row within existing assignment work?
 	 * If not, just start over.
 	 */
-	if (! done) {
+	if (! done) _Unchecked {
 	    FreeAllocMaps();
 	    FreeAssign();
 	    assert(channelTracks == channelTracksCopy + 1);
