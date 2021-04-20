@@ -58,8 +58,7 @@ Option(int,
 #else	/* OPTION_CODE */
 
 extern void
-Option(int,
-       char (*[]));
+Option(int argc, _Array_ptr<char *> argv : count(argc));
 
 #endif	/* OPTION_CODE */
 

@@ -33,29 +33,29 @@
 void
 AllocVCG(void)
 {
-    VCG = (nodeVCGType *)malloc((channelNets + 1) * sizeof(nodeVCGType));
-    storageRootVCG = (constraintVCGType *)malloc((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType));
+    VCG = (_Array_ptr<nodeVCGType>)malloc<nodeVCGType>((channelNets + 1) * sizeof(nodeVCGType));
+    storageRootVCG = (_Array_ptr<constraintVCGType>)malloc<constraintVCGType>((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType));
     storageVCG = storageRootVCG;
     storageLimitVCG = (channelNets + 1) * (channelNets + 1);
-    SCC = (ulong *)malloc((channelNets + 1) * sizeof(ulong));
-    perSCC = (ulong *)malloc((channelNets + 1) * sizeof(ulong));
-    removeVCG = (constraintVCGType * *)malloc((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType *));
+    SCC = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets + 1) * sizeof(ulong));
+    perSCC = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets + 1) * sizeof(ulong));
+    removeVCG = (_Array_ptr<_Array_ptr<constraintVCGType>>)malloc<_Array_ptr<constraintVCGType>>((channelNets + 1) * (channelNets + 1) * sizeof(constraintVCGType *));
 }
 
 void
 FreeVCG(void)
-{
-    free(VCG);
-    free(storageRootVCG);
+_Checked {
+    free<nodeVCGType>(VCG);
+    free<constraintVCGType>(storageRootVCG);
     storageLimitVCG = 0;
-    free(SCC);
-    free(perSCC);
-    free(removeVCG);
+    free<unsigned long>(SCC);
+    free<unsigned long>(perSCC);
+    free<_Array_ptr<constraintVCGType>>(removeVCG);
 }
 
 void
 BuildVCG(void)
-{
+_Checked {
     ulong	col;
     ulong	net;
     ulong	constraint;
@@ -92,7 +92,7 @@ BuildVCG(void)
 		/*
 		 * Add constraint.
 		 */
-		if (add) {
+		if (add) _Unchecked {
 		    assert(storageLimitVCG > 0);
 		    VCG[net].netsAboveHook[constraint].top = TOP[col];
 		    VCG[net].netsAboveHook[constraint].bot = BOT[col];
@@ -127,7 +127,7 @@ BuildVCG(void)
 		/*
 		 * Add constraint.
 		 */
-		if (add) {
+		if (add) _Unchecked {
 		    assert(storageLimitVCG > 0);
 		    VCG[net].netsBelowHook[constraint].top = TOP[col];
 		    VCG[net].netsBelowHook[constraint].bot = BOT[col];
@@ -144,8 +144,8 @@ BuildVCG(void)
 }
 
 void
-DFSClearVCG(nodeVCGType * VCG)
-{
+DFSClearVCG(_Array_ptr<nodeVCGType> VCG)
+_Checked {
     ulong	net;
 
     for (net = 1; net <= channelNets; net++) {
@@ -157,46 +157,45 @@ DFSClearVCG(nodeVCGType * VCG)
 }
 
 void
-DumpVCG(nodeVCGType * VCG)
-{
+DumpVCG(_Array_ptr<nodeVCGType> VCG)
+_Checked {
     ulong	net;
     ulong	which;
 
     for (net = 1; net <= channelNets; net++) {
-	printf("[%d]\n", net);
-	printf("above: ");
+	_Unchecked { printf("[%d]\n", net); };
+	_Unchecked { printf("above: "); };
 	for (which = 0; which < VCG[net].netsAbove; which++) {
-	    if (! VCG[net].netsAboveHook[which].removed) {
+	    if (! VCG[net].netsAboveHook[which].removed) _Unchecked {
 		assert(VCG[net].netsAboveHook[which].top == net);
 		printf("%d ", VCG[net].netsAboveHook[which].bot);
 	    }
 	}
 
-	printf("\n");
-	printf("below: ");
+	_Unchecked { printf("\n"); };
+	_Unchecked { printf("below: "); };
 	for (which = 0; which < VCG[net].netsBelow; which++) {
-	    if (! VCG[net].netsBelowHook[which].removed) {
+	    if (! VCG[net].netsBelowHook[which].removed) _Unchecked {
 		assert(VCG[net].netsBelowHook[which].bot == net);
 		printf("%d ", VCG[net].netsBelowHook[which].top);
 	    }
 	}
-	printf("\n\n");
+	_Unchecked { printf("\n\n"); };
     }	
 }
 
 void
-DFSAboveVCG(nodeVCGType * VCG,
-	    ulong net)
-{
+DFSAboveVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net)
+_Checked {
     ulong	s;
     ulong 	above;
 
     VCG[net].netsAboveReached = TRUE;
     for (s = 0; s < VCG[net].netsAbove; s++) {
-	if (! VCG[net].netsAboveHook[s].removed) {
+	if (! VCG[net].netsAboveHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsAboveHook[s].top == net);
 	    above = VCG[net].netsAboveHook[s].bot;
-	    if (! VCG[above].netsAboveReached) {
+	    if (! VCG[above].netsAboveReached) _Checked {
 		DFSAboveVCG(VCG, above);
 	    }
 	}
@@ -204,18 +203,17 @@ DFSAboveVCG(nodeVCGType * VCG,
 }
 
 void
-DFSBelowVCG(nodeVCGType * VCG,
-	    ulong net)
-{
+DFSBelowVCG(_Array_ptr<nodeVCGType> VCG, ulong net)
+_Checked {
     ulong	s;
     ulong 	below;
 
     VCG[net].netsBelowReached = TRUE;
     for (s = 0; s < VCG[net].netsBelow; s++) {
-	if (! VCG[net].netsBelowHook[s].removed) {
+	if (! VCG[net].netsBelowHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsBelowHook[s].bot == net);
 	    below = VCG[net].netsBelowHook[s].top;
-	    if (! VCG[below].netsBelowReached) {
+	    if (! VCG[below].netsBelowReached) _Checked {
 		DFSBelowVCG(VCG, below);
 	    }
 	}
@@ -223,9 +221,7 @@ DFSBelowVCG(nodeVCGType * VCG,
 }
 
 void
-SCCofVCG(nodeVCGType * VCG,
-	 ulong * SCC,
-	 ulong * perSCC)
+SCCofVCG(_Array_ptr<nodeVCGType> VCG, _Array_ptr<ulong> SCC, _Array_ptr<ulong> perSCC)
 {
     ulong      	net;
     ulong      	scc;
@@ -241,7 +237,7 @@ SCCofVCG(nodeVCGType * VCG,
      * DFS of above edges.
      */
     label = 0;
-    for (net = 1; net <= channelNets; net++){
+    for (net = 1; net <= channelNets; net++)_Checked {
 	if (! VCG[net].netsAboveReached) {
 	    SCC_DFSAboveVCG(VCG, net, &label);
 	}
@@ -251,7 +247,7 @@ SCCofVCG(nodeVCGType * VCG,
      * DFS of below edges.
      */
     which = 0;
-    do {
+    do _Checked {
 	done = TRUE;
 
 	/*
@@ -260,9 +256,9 @@ SCCofVCG(nodeVCGType * VCG,
 	choose = 0;
 	large = 0;
 	for (net = 1; net <= channelNets; net++) {
-	    if (! VCG[net].netsBelowReached) {
+	    if (! VCG[net].netsBelowReached) _Unchecked {
 		assert(VCG[net].netsAboveLabel > 0);
-		if (VCG[net].netsAboveLabel > large) {
+		if (VCG[net].netsAboveLabel > large) _Checked {
 		    choose = net;
 		    large = VCG[net].netsAboveLabel;
 		    done = FALSE;
@@ -283,14 +279,14 @@ SCCofVCG(nodeVCGType * VCG,
      * Identify all SCC.
      */
     totalSCC = 0;
-    for (net = 1; net <= channelNets; net++) {
+    for (net = 1; net <= channelNets; net++) _Checked {
 	SCC[net] = VCG[net].netsBelowLabel;
 	if (SCC[net] > totalSCC) {
 	    totalSCC = SCC[net];
 	}
     }
     assert(totalSCC > 0);
-    for (scc = 1; scc <= totalSCC; scc++) {
+    for (scc = 1; scc <= totalSCC; scc++) _Checked {
 	per = 0;
 	for (net = 1; net <= channelNets; net++) {
 	    if (SCC[net] == scc) {
@@ -303,19 +299,17 @@ SCCofVCG(nodeVCGType * VCG,
 }
 
 void
-SCC_DFSAboveVCG(nodeVCGType * VCG,
-		ulong net,
-		ulong * label)
-{
+SCC_DFSAboveVCG(_Array_ptr<nodeVCGType> VCG, ulong net, _Ptr<ulong> label)
+_Checked {
     ulong	s;
     ulong 	above;
 
     VCG[net].netsAboveReached = TRUE;
     for (s = 0; s < VCG[net].netsAbove; s++) {
-	if (! VCG[net].netsAboveHook[s].removed) {
+	if (! VCG[net].netsAboveHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsAboveHook[s].top == net);
 	    above = VCG[net].netsAboveHook[s].bot;
-	    if (! VCG[above].netsAboveReached) {
+	    if (! VCG[above].netsAboveReached) _Checked {
 		SCC_DFSAboveVCG(VCG, above, label);
 	    }
 	}
@@ -325,19 +319,17 @@ SCC_DFSAboveVCG(nodeVCGType * VCG,
 }
 
 void
-SCC_DFSBelowVCG(nodeVCGType * VCG,
-		ulong net,
-		ulong label)
-{
+SCC_DFSBelowVCG(_Array_ptr<nodeVCGType> VCG, ulong net, ulong label)
+_Checked {
     ulong	s;
     ulong 	below;
 
     VCG[net].netsBelowReached = TRUE;
     for (s = 0; s < VCG[net].netsBelow; s++) {
-	if (! VCG[net].netsBelowHook[s].removed) {
+	if (! VCG[net].netsBelowHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsBelowHook[s].bot == net);
 	    below = VCG[net].netsBelowHook[s].top;
-	    if (! VCG[below].netsBelowReached) {
+	    if (! VCG[below].netsBelowReached) _Checked {
 		SCC_DFSBelowVCG(VCG, below, label);
 	    }
 	}
@@ -346,28 +338,27 @@ SCC_DFSBelowVCG(nodeVCGType * VCG,
 }
 
 void
-DumpSCC(ulong * SCC,
-	ulong * perSCC)
-{
+DumpSCC(_Array_ptr<ulong> SCC, _Array_ptr<ulong> perSCC)
+_Checked {
     ulong	net;
     ulong	scc;
 
     for (scc = 1; scc <= totalSCC; scc++) {
-	printf("[%d]\t", scc);
+	_Unchecked { printf("[%d]\t", scc); };
 	for (net = 1; net <= channelNets; net++) {
-	    if (SCC[net] == scc) {
+	    if (SCC[net] == scc) _Unchecked {
 		printf("%d ", net);
 	    }
 	}
-	printf("<%d>", perSCC[scc]);
-	printf("\n");
+	_Unchecked { printf("<%d>", perSCC[scc]); };
+	_Unchecked { printf("\n"); };
     }
-    printf("\n");
+    _Unchecked { printf("\n"); };
 }
 
 void
 AcyclicVCG(void)
-{
+_Checked {
     ulong	done;
     ulong	scc;
     ulong	net;
@@ -488,21 +479,18 @@ AcyclicVCG(void)
 	}
     }
 
-    if (acyclic) {
+    if (acyclic) _Unchecked {
 	printf("\n*** Input is acyclic! ***\n");
     }
     else {
-	printf("\n*** Input is cyclic! ***\n");
-	printf("*** VC's removed (%d) ***\n", total);
+	_Unchecked { printf("\n*** Input is cyclic! ***\n"); };
+	_Unchecked { printf("*** VC's removed (%d) ***\n", total); };
     }
 }
 
 void
-RemoveConstraintVCG(nodeVCGType * VCG,
-		    ulong * SCC,
-		    ulong * perSCC,
-		    constraintVCGType * * removeVCG)
-{
+RemoveConstraintVCG(_Array_ptr<nodeVCGType> VCG, _Array_ptr<ulong> SCC, _Array_ptr<ulong> perSCC, _Array_ptr<_Array_ptr<constraintVCGType>> removeVCG : count(0))
+_Checked {
     ulong			scc;
     ulong			net;
     ulong			which;
@@ -511,19 +499,19 @@ RemoveConstraintVCG(nodeVCGType * VCG,
     ulong			top;
     ulong			bot;
     ulong			col;
-    constraintVCGType *	remove;
+    _Array_ptr<constraintVCGType> remove = ((void *)0);
 
     for (scc = 1; scc <= totalSCC; scc++) {
 	/*
 	 * For each SCC attempt to remove cycle.
 	 */
-	if (perSCC[scc] > 1) {
+	if (perSCC[scc] > 1) _Unchecked {
 	    /*
 	     * SCC of more than one net in SCC, thus cycle.
 	     */
 	    remove = NULL;
 	    best = FULL + 1;
-	    for (net = 1; net <= channelNets; net++) {
+	    for (net = 1; net <= channelNets; net++) _Checked {
 		/*
 		 * For each net in the SCC.
 		 */
@@ -627,7 +615,7 @@ RemoveConstraintVCG(nodeVCGType * VCG,
 	    /*
 	     * Remove below constraint.
 	     */
-	    for (which = 0; which < VCG[bot].netsBelow; which++) {
+	    for (which = 0; which < VCG[bot].netsBelow; which++) _Checked {
 		if (VCG[bot].netsBelowHook[which].top == top) {
 		    VCG[bot].netsBelowHook[which].removed = TRUE;
 		    break;
@@ -638,19 +626,16 @@ RemoveConstraintVCG(nodeVCGType * VCG,
 }
 
 ulong
-ExistPathAboveVCG(nodeVCGType * VCG,
-		  ulong above,
-		  ulong below)
-{
+ExistPathAboveVCG(_Array_ptr<nodeVCGType> VCG : count(above), ulong above, ulong below)
+_Checked {
     DFSClearVCG(VCG);
     DFSAboveVCG(VCG, above);
     return(VCG[below].netsAboveReached);
 }
 
 void
-LongestPathVCG(nodeVCGType * VCG,
-	       ulong net)
-{
+LongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net)
+_Checked {
     ulong	track;
     ulong	bot;
     ulong	top;
@@ -712,9 +697,8 @@ LongestPathVCG(nodeVCGType * VCG,
 }
 
 ulong
-DFSAboveLongestPathVCG(nodeVCGType * VCG,
-		       ulong net)
-{
+DFSAboveLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net)
+_Checked {
     ulong	s;
     ulong 	above;
     ulong	path;
@@ -723,10 +707,10 @@ DFSAboveLongestPathVCG(nodeVCGType * VCG,
     longest = 0;
     VCG[net].netsAboveReached = TRUE;
     for (s = 0; s < VCG[net].netsAbove; s++) {
-	if (! VCG[net].netsAboveHook[s].removed) {
+	if (! VCG[net].netsAboveHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsAboveHook[s].top == net);
 	    above = VCG[net].netsAboveHook[s].bot;
-	    if (! VCG[above].netsAboveReached) {
+	    if (! VCG[above].netsAboveReached) _Checked {
 		path = DFSAboveLongestPathVCG(VCG, above);
 		if (path > longest) {
 		    longest = path;
@@ -738,9 +722,8 @@ DFSAboveLongestPathVCG(nodeVCGType * VCG,
 }
 
 ulong
-DFSBelowLongestPathVCG(nodeVCGType * VCG,
-		       ulong net)
-{
+DFSBelowLongestPathVCG(_Array_ptr<nodeVCGType> VCG : count(net), ulong net)
+_Checked {
     ulong	s;
     ulong 	below;
     ulong	path;
@@ -749,10 +732,10 @@ DFSBelowLongestPathVCG(nodeVCGType * VCG,
     longest = 0;
     VCG[net].netsBelowReached = TRUE;
     for (s = 0; s < VCG[net].netsBelow; s++) {
-	if (! VCG[net].netsBelowHook[s].removed) {
+	if (! VCG[net].netsBelowHook[s].removed) _Unchecked {
 	    assert(VCG[net].netsBelowHook[s].bot == net);
 	    below = VCG[net].netsBelowHook[s].top;
-	    if (! VCG[below].netsBelowReached) {
+	    if (! VCG[below].netsBelowReached) _Checked {
 		path = DFSBelowLongestPathVCG(VCG, below);
 		if (path > longest) {
 		    longest = path;
@@ -764,11 +747,8 @@ DFSBelowLongestPathVCG(nodeVCGType * VCG,
 }
 
 ulong
-VCV(nodeVCGType * VCG,
-    ulong check,
-    ulong track,
-    ulong * assign)
-{
+VCV(_Array_ptr<nodeVCGType> VCG : count(check), ulong check, ulong track, _Array_ptr<ulong> assign)
+_Checked {
     ulong	net;
     ulong	vcv;
 

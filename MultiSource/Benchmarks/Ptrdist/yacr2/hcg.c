@@ -31,23 +31,23 @@
 void
 AllocHCG(void)
 {
-    HCG = (nodeHCGType *)malloc((channelNets + 1) * sizeof(nodeHCGType));
-    storageRootHCG = (ulong *)malloc((channelNets + 1) * (channelNets + 1) * sizeof(ulong));
+    HCG = (_Array_ptr<nodeHCGType>)malloc<nodeHCGType>((channelNets + 1) * sizeof(nodeHCGType));
+    storageRootHCG = (_Array_ptr<unsigned long>)malloc<unsigned long>((channelNets + 1) * (channelNets + 1) * sizeof(ulong));
     storageHCG = storageRootHCG;
     storageLimitHCG = (channelNets + 1) * (channelNets + 1);
 }
 
 void
 FreeHCG(void)
-{
-    free(HCG);
-    free(storageRootHCG);
+_Checked {
+    free<nodeHCGType>(HCG);
+    free<unsigned long>(storageRootHCG);
     storageLimitHCG = 0;
 }
 
 void
 BuildHCG(void)
-{
+_Checked {
     ulong	net;
     ulong	which;
     ulong	constraint;
@@ -75,7 +75,7 @@ BuildHCG(void)
 		 * No constraint.
 		 */
 	    }
-	    else {
+	    else _Unchecked {
 		/*
 		 * No constraint should ever already exist.
 		 * Because there is only one first and last
@@ -83,7 +83,7 @@ BuildHCG(void)
 		 * never be added twice.
 		 */
 		add = TRUE;
-		for (check = 0; check < constraint; check++) {
+		for (check = 0; check < constraint; check++) _Checked {
 		    if (HCG[net].netsHook[check] == which) {
 			add = FALSE;
 			break;
@@ -106,8 +106,8 @@ BuildHCG(void)
 }
 
 void
-DFSClearHCG(nodeHCGType * HCG)
-{
+DFSClearHCG(_Array_ptr<nodeHCGType> HCG)
+_Checked {
     ulong	net;
 
     for (net = 1; net <= channelNets; net++) {
@@ -116,26 +116,23 @@ DFSClearHCG(nodeHCGType * HCG)
 }
 
 void
-DumpHCG(nodeHCGType * HCG)
-{
+DumpHCG(_Array_ptr<nodeHCGType> HCG)
+_Checked {
     ulong	net;
     ulong	which;
 
     for (net = 1; net <= channelNets; net++) {
-	printf("[%d]\n", net);
-	for (which = 0; which < HCG[net].nets; which++) {
+	_Unchecked { printf("[%d]\n", net); };
+	for (which = 0; which < HCG[net].nets; which++) _Unchecked {
 	    printf("%d ", HCG[net].netsHook[which]);
 	}
-	printf("\n\n");
+	_Unchecked { printf("\n\n"); };
     }	
 }
 
 void
-NoHCV(nodeHCGType * HCG,
-      ulong select,
-      ulong * netsAssign,
-      ulong * tracksNoHCV)
-{
+NoHCV(_Array_ptr<nodeHCGType> HCG, ulong select, _Array_ptr<ulong> netsAssign, _Array_ptr<ulong> tracksNoHCV)
+_Checked {
     ulong	track;
     ulong	net;
     ulong	which;

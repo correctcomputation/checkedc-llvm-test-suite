@@ -28,14 +28,13 @@
  */
 
 void
-Option(int argc,
-       char *argv[])
+Option(int argc, _Array_ptr<char *> argv : count(argc))
 {
     /*
      * Check arguments.
      */
-    if (argc != 2) {
-	printf("\nUsage: yacr2 <filename>\n\n");
+    if (argc != 2) _Checked {
+	_Unchecked { printf("\nUsage: yacr2 <filename>\n\n"); };
 	exit(1);
     }
 
